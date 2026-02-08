@@ -18,22 +18,31 @@ const CountryContext = createContext<CountryContextType | undefined>(undefined);
 
 // Provider component
 export const CountryProvider = ({ children }: { children: ReactNode }) => {
-  const [selectedCountry, setSelectedCountry] = useState<string>('nigeria');
+  const [selectedCountry, setSelectedCountry] = useState<string>(() => {
+    // Initialize from localStorage or default to 'nigeria'
+    return localStorage.getItem('selectedCountry') || 'nigeria';
+  });
   const location = useLocation();
 
-  // Detect country from URL path on route change
+  // Detect country from URL path ONLY on initial load or direct navigation
   useEffect(() => {
     const path = location.pathname;
     
+    // Only set country from URL if it's explicitly a country route
     if (path.startsWith('/canada')) {
       setSelectedCountry('canada');
+      localStorage.setItem('selectedCountry', 'canada');
     } else if (path.startsWith('/nigeria')) {
       setSelectedCountry('nigeria');
-    } else {
-      // Default to Nigeria for global routes (/)
-      setSelectedCountry('nigeria');
+      localStorage.setItem('selectedCountry', 'nigeria');
     }
+    // For global routes (/services, /about, etc.), keep the current selection
   }, [location.pathname]);
+
+  // Persist country selection to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('selectedCountry', selectedCountry);
+  }, [selectedCountry]);
 
   // Get current country data based on selection
   const currentData = countryData[selectedCountry] || countryData.nigeria;
