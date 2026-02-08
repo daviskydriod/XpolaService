@@ -14,7 +14,12 @@ import Footer from "../components/Footer";
 import { useCountry } from "../contexts/CountryContext";
 
 const Index = () => {
-  const { selectedCountry } = useCountry();
+  const { currentData } = useCountry();
+
+  // Ensure data is available before rendering
+  if (!currentData) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
