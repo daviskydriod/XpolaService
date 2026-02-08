@@ -30,6 +30,8 @@ const HeroSection = () => {
   const { theme } = useTheme();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
+  const [typedText, setTypedText] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
 
   // Parallax mouse effect
   useEffect(() => {
@@ -42,6 +44,31 @@ const HeroSection = () => {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  // Typing animation effect
+  useEffect(() => {
+    const text = currentData.hero.title;
+    let index = 0;
+    
+    const typingInterval = setInterval(() => {
+      if (index <= text.length) {
+        setTypedText(text.slice(0, index));
+        index++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 50); // Adjust speed here (lower = faster)
+
+    // Blinking cursor
+    const cursorInterval = setInterval(() => {
+      setShowCursor((prev) => !prev);
+    }, 500);
+
+    return () => {
+      clearInterval(typingInterval);
+      clearInterval(cursorInterval);
+    };
+  }, [currentData.hero.title]);
 
   // Trigger animations on mount
   useEffect(() => {
@@ -162,39 +189,29 @@ const HeroSection = () => {
       {/* Hero Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 pt-32 md:pt-40 pb-32">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Main Heading with Staggered Word Animation */}
+          {/* Main Heading with Typing Animation */}
           <h1
-            className={`font-montserrat font-extrabold text-4xl md:text-5xl lg:text-6xl leading-tight text-foreground mb-6 transition-all duration-1000 ${
+            className={`font-montserrat font-extrabold text-4xl md:text-5xl lg:text-6xl leading-tight text-foreground mb-8 transition-all duration-1000 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}
             style={{
-              textShadow: theme === 'light' 
-                ? "0 2px 20px rgba(0, 0, 0, 0.1)" 
-                : "0 4px 30px rgba(0, 0, 0, 0.8)",
               letterSpacing: "-0.5px",
+              lineHeight: "1.3",
             }}
           >
-            {currentData.hero.title.split(' ').map((word, i) => (
-              <span
-                key={i}
-                className="inline-block animate-slide-in-up"
-                style={{
-                  animationDelay: `${i * 0.1}s`,
-                  animationFillMode: 'both',
-                }}
-              >
-                {word}{' '}
-              </span>
-            ))}
+            {typedText}
+            {showCursor && typedText.length < currentData.hero.title.length && (
+              <span className="inline-block w-1 h-12 md:h-14 lg:h-16 bg-primary ml-1 animate-blink"></span>
+            )}
           </h1>
 
-          {/* Sub-headline with Fade In */}
+          {/* Sub-headline with Fade In and Better Spacing */}
           <p
-            className={`font-poppins text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 transition-all duration-1000 delay-500 ${
+            className={`font-poppins text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-12 transition-all duration-1000 delay-500 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
             }`}
             style={{ 
-              textShadow: theme === 'light' ? "none" : "0 2px 10px rgba(0, 0, 0, 0.5)",
+              lineHeight: "1.8",
             }}
           >
             {currentData.hero.subtitle}
@@ -276,6 +293,15 @@ const HeroSection = () => {
 
       {/* Add these styles to your globals.css */}
       <style>{`
+        @keyframes blink {
+          0%, 49% {
+            opacity: 1;
+          }
+          50%, 100% {
+            opacity: 0;
+          }
+        }
+
         @keyframes slide-in-up {
           from {
             opacity: 0;
@@ -358,6 +384,10 @@ const HeroSection = () => {
             opacity: 0;
             transform: translateY(10px);
           }
+        }
+
+        .animate-blink {
+          animation: blink 1s step-end infinite;
         }
 
         .animate-slide-in-up {
