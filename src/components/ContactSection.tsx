@@ -51,7 +51,7 @@ const ContactSection = () => {
 
         <div className="flex justify-center gap-4">
           {socialLinks.map((social, index) => (
-            
+            <a
               key={index}
               href={social.href}
               aria-label={social.label}
