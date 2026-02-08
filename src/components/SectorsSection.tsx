@@ -1,8 +1,6 @@
-// FILE PATH: src/components/common/SectorsSection.tsx
-// Place this file at: src/components/common/SectorsSection.tsx
-
 import { ArrowRight, Briefcase, Fuel, Building, Mountain, Globe, ShoppingCart, Truck, Package, ShoppingBag, Users } from "lucide-react";
 import { useCountry } from "@/contexts/CountryContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import consultingImg from "@/assets/consulting.jpg";
 import oilGasImg from "@/assets/oil-gas.jpg";
 import constructionImg from "@/assets/construction.jpg";
@@ -100,11 +98,12 @@ interface SectorCardProps {
 }
 
 const SectorCard = ({ sector, index, getImage }: SectorCardProps) => {
+  const { theme } = useTheme();
   const Icon = iconMap[sector.icon];
 
   return (
     <div
-      className="group relative bg-black border border-border rounded-2xl overflow-hidden transition-all duration-400 hover:border-primary hover:-translate-y-2"
+      className="group relative bg-card border border-border rounded-2xl overflow-hidden transition-all duration-400 hover:border-primary hover:-translate-y-2 hover:shadow-xl"
       style={{
         animationDelay: `${index * 0.1}s`,
       }}
@@ -114,22 +113,31 @@ const SectorCard = ({ sector, index, getImage }: SectorCardProps) => {
         <img
           src={getImage(sector.link)}
           alt={sector.title}
-          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
-          style={{ filter: "brightness(0.75)" }}
+          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+          style={{ 
+            filter: theme === 'light' 
+              ? 'brightness(0.9) contrast(1.05)' 
+              : 'brightness(0.7) contrast(1.1)',
+          }}
         />
         <div
-          className="absolute inset-0 transition-all duration-500 group-hover:brightness-110"
-          style={{ filter: "brightness(0.95)" }}
+          className="absolute inset-0 transition-opacity duration-500"
+          style={{ 
+            background: theme === 'light'
+              ? 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.95) 100%)'
+              : 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 100%)',
+            opacity: theme === 'light' ? 0.7 : 0.9,
+          }}
         />
       </div>
 
       {/* Icon Container - Overlapping */}
-      <div className="absolute left-6 top-40 z-10 w-16 h-16 bg-black border-2 border-primary rounded-xl flex items-center justify-center shadow-lg">
-        {Icon && <Icon className="w-8 h-8 text-primary transition-transform duration-500 group-hover:rotate-12" />}
+      <div className="absolute left-6 top-40 z-10 w-16 h-16 bg-background border-2 border-primary rounded-xl flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
+        {Icon && <Icon className="w-8 h-8 text-primary" />}
       </div>
 
       {/* Content Area */}
-      <div className="pt-12 pb-16 px-6">
+      <div className="pt-12 pb-16 px-6 bg-card">
         <h3 className="font-montserrat font-bold text-xl md:text-[22px] text-foreground mb-3 leading-tight min-h-[56px]">
           {sector.title}
         </h3>
@@ -139,9 +147,9 @@ const SectorCard = ({ sector, index, getImage }: SectorCardProps) => {
       </div>
 
       {/* Learn More Link */}
-      <a
+      
         href={sector.link}
-        className="absolute bottom-6 left-6 font-poppins font-semibold text-sm text-primary flex items-center gap-2 transition-all duration-300 hover:text-primary-glow group/link"
+        className="absolute bottom-6 left-6 font-poppins font-semibold text-sm text-primary flex items-center gap-2 transition-all duration-300 hover:gap-3 group/link"
       >
         Learn More
         <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/link:translate-x-1" />
