@@ -79,13 +79,13 @@ const TestimonialsSection = () => {
           {/* Navigation Arrows */}
           <button
             onClick={handlePrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center transition-all duration-300 hover:border-primary hover:bg-primary/10"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center transition-all duration-300 hover:border-primary hover:bg-background-secondary"
           >
             <ChevronLeft className="w-5 h-5 text-muted-foreground" />
           </button>
           <button
             onClick={handleNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center transition-all duration-300 hover:border-primary hover:bg-primary/10"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center transition-all duration-300 hover:border-primary hover:bg-background-secondary"
           >
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -126,7 +126,7 @@ interface TestimonialCardProps {
 
 const TestimonialCard = ({ testimonial, image }: TestimonialCardProps) => {
   return (
-    <div className="bg-black border border-border rounded-2xl p-8 md:p-10 relative transition-all duration-300 hover:border-primary/30 hover:-translate-y-1">
+    <div className="bg-card border border-border rounded-2xl p-8 md:p-10 relative transition-all duration-300 hover:border-primary hover:-translate-y-1 hover:shadow-xl">
       {/* Quote Icon */}
       <div className="absolute top-8 left-8 text-6xl font-serif text-primary/15 leading-none">
         "
