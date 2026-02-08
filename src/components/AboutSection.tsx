@@ -1,14 +1,13 @@
-// FILE PATH: src/components/common/AboutSection.tsx
-// Place this file at: src/components/common/AboutSection.tsx
-
 import { useCountry } from "@/contexts/CountryContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import heroBackground from "@/assets/hero-bg.jpg";
 
 const AboutSection = () => {
   const { currentData } = useCountry();
+  const { theme } = useTheme();
 
   return (
-    <section id="about" className="relative py-16 md:py-20 overflow-hidden">
+    <section id="about" className="relative py-16 md:py-20 overflow-hidden bg-background">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <img
@@ -16,14 +15,16 @@ const AboutSection = () => {
           alt="Background"
           className="h-full w-full object-cover"
           style={{
-            filter: "brightness(0.3) contrast(1.1) saturate(0.7)",
+            opacity: theme === 'light' ? 0.08 : 0.15,
+            filter: theme === 'light' ? 'brightness(1.1) contrast(0.9)' : 'brightness(0.5) contrast(1.1)',
           }}
         />
         <div
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(10, 10, 10, 0.9) 100%)",
+            background: theme === 'light'
+              ? "linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.95) 100%)"
+              : "linear-gradient(135deg, rgba(18, 18, 18, 0.95) 0%, rgba(30, 30, 30, 0.92) 100%)",
           }}
         />
       </div>
@@ -61,10 +62,10 @@ const AboutSection = () => {
                 {currentData.about.serveSectors.map((sector, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary/50 transition-all duration-300"
+                    className="flex items-start gap-3 p-3 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-300"
                   >
                     <div className="flex-shrink-0 w-2 h-2 rounded-full bg-primary mt-2"></div>
-                    <p className="font-poppins text-sm md:text-base text-muted-foreground">
+                    <p className="font-poppins text-sm md:text-base text-foreground">
                       {sector}
                     </p>
                   </div>
@@ -75,7 +76,7 @@ const AboutSection = () => {
 
           {/* Right Column - Image */}
           <div className="relative">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/30">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border">
               <img
                 src={heroBackground}
                 alt="Business operations"
@@ -83,30 +84,40 @@ const AboutSection = () => {
                 style={{
                   minHeight: "400px",
                   maxHeight: "600px",
+                  filter: theme === 'light' ? 'brightness(0.95)' : 'brightness(0.7)',
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-              <div className="absolute inset-0 rounded-2xl ring-1 ring-primary/20"></div>
+              <div 
+                className="absolute inset-0"
+                style={{
+                  background: theme === 'light'
+                    ? "linear-gradient(to top, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 50%, transparent 100%)"
+                    : "linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%)",
+                }}
+              ></div>
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-primary/30"></div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Decorative Elements */}
+      {/* Decorative Elements - Using Brand Colors */}
       <div
-        className="absolute w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none"
+        className="absolute w-96 h-96 rounded-full blur-3xl pointer-events-none"
         style={{
-          background: "radial-gradient(circle, rgba(220, 38, 38, 0.3) 0%, transparent 70%)",
+          background: "radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)",
           top: "10%",
           right: "10%",
+          opacity: theme === 'light' ? 0.5 : 0.3,
         }}
       ></div>
       <div
-        className="absolute w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none"
+        className="absolute w-96 h-96 rounded-full blur-3xl pointer-events-none"
         style={{
-          background: "radial-gradient(circle, rgba(220, 38, 38, 0.3) 0%, transparent 70%)",
+          background: "radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)",
           bottom: "10%",
           left: "10%",
+          opacity: theme === 'light' ? 0.5 : 0.3,
         }}
       ></div>
     </section>
