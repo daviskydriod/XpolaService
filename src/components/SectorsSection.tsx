@@ -1,4 +1,5 @@
 import { ArrowRight, Briefcase, Fuel, Building, Mountain, Globe, ShoppingCart, Truck, Package, ShoppingBag, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useCountry } from "@/contexts/CountryContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import consultingImg from "@/assets/consulting.jpg";
@@ -137,13 +138,13 @@ const SectorCard = ({ sector, index, getImage }: SectorCardProps) => {
         </p>
       </div>
 
-      
-        href={sector.link}
+      <Link
+        to={sector.link}
         className="absolute bottom-6 left-6 font-poppins font-semibold text-sm text-primary flex items-center gap-2 transition-all duration-300 hover:gap-3"
       >
         Learn More
         <ArrowRight className="w-4 h-4" />
-      </a>
+      </Link>
     </div>
   );
 };
