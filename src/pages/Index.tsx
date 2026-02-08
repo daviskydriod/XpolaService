@@ -8,6 +8,7 @@ import StatsSection from "../components/StatsSection";
 import SectorsSection from "../components/SectorsSection";
 import WhyChooseSection from "../components/WhyChooseSection";
 import TestimonialsSection from "../components/TestimonialsSection";
+import CTASection from "../components/CTASection";
 import ContactSection from "../components/ContactSection";
 import Footer from "../components/Footer";
 import { useCountry } from "../contexts/CountryContext";
@@ -23,6 +24,7 @@ const Index = () => {
       <StatsSection />
       <SectorsSection />
       <WhyChooseSection />
+      <CTASection />
       <TestimonialsSection />
       <ContactSection />
       <Footer />
