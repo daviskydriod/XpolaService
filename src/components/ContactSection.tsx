@@ -1,8 +1,6 @@
-// FILE PATH: src/components/common/ContactSection.tsx
-// Place this file at: src/components/common/ContactSection.tsx
-
 import { Mail, Phone, Clock, Linkedin, Twitter, Facebook, Instagram } from "lucide-react";
 import { useCountry } from "@/contexts/CountryContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const socialLinks = [
   { icon: Linkedin, href: "#", label: "LinkedIn" },
@@ -58,13 +56,13 @@ const ContactSection = () => {
         {/* Social Links */}
         <div className="flex justify-center gap-4">
           {socialLinks.map((social, index) => (
-            <a
+            
               key={index}
               href={social.href}
               aria-label={social.label}
-              className="w-12 h-12 rounded-xl bg-black border border-border flex items-center justify-center transition-all duration-300 hover:border-primary hover:bg-primary/10 hover:-translate-y-0.5"
+              className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center transition-all duration-300 hover:border-primary hover:bg-primary/10 hover:-translate-y-0.5 group"
             >
-              <social.icon className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+              <social.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
             </a>
           ))}
         </div>
@@ -82,10 +80,11 @@ interface ContactCardProps {
 }
 
 const ContactCard = ({ card }: ContactCardProps) => {
+  const { theme } = useTheme();
   const Icon = card.icon;
 
   return (
-    <div className="bg-black border border-border rounded-2xl p-8 text-center flex flex-col items-center transition-all duration-300 hover:border-primary hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(255,0,0,0.2)]">
+    <div className="bg-card border border-border rounded-2xl p-8 text-center flex flex-col items-center transition-all duration-300 hover:border-primary hover:-translate-y-1 hover:shadow-xl">
       {/* Icon Container */}
       <div className="icon-container mb-5">
         <Icon className="w-8 h-8 text-primary" />
