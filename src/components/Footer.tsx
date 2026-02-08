@@ -4,7 +4,9 @@
 import { useState } from "react";
 import { Linkedin, Twitter, Facebook, Instagram } from "lucide-react";
 import { useCountry } from "@/contexts/CountryContext";
-import logo from "@/assets/logo-white.png";
+import { useTheme } from "@/contexts/ThemeContext";
+import logoWhite from "@/assets/logo-white.png";
+import logoBlack from "@/assets/logo-black.png";
 
 const quickLinks = [
   { label: "About Us", href: "#about" },
@@ -29,6 +31,7 @@ const legalLinks = [
 
 const Footer = () => {
   const { currentData, selectedCountry } = useCountry();
+  const { theme } = useTheme();
   const [email, setEmail] = useState("");
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -43,13 +46,20 @@ const Footer = () => {
     href: sector.link,
   }));
 
+  // Use white logo for dark theme, black logo for light theme
+  const currentLogo = theme === 'dark' ? logoWhite : logoBlack;
+
   return (
     <footer className="bg-background pt-16 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-12">
           {/* Column 1: Company Info */}
           <div className="lg:col-span-1">
-            <img src={logo} alt="Xpola" className="h-10 md:h-12 mb-5" />
+            <img 
+              src={currentLogo} 
+              alt="Xpola" 
+              className="h-10 md:h-12 mb-5 transition-opacity duration-300" 
+            />
             <p className="font-poppins text-sm text-muted-foreground mb-6 max-w-xs">
               {currentData.footer.tagline}
             </p>
@@ -125,7 +135,7 @@ const Footer = () => {
               />
               <button
                 type="submit"
-                className="w-full h-11 bg-primary hover:bg-primary/80 text-foreground font-poppins font-semibold text-sm rounded-lg transition-all duration-300 hover:-translate-y-0.5"
+                className="w-full h-11 bg-primary text-white hover:bg-primary/90 font-poppins font-semibold text-sm rounded-lg transition-all duration-300 hover:-translate-y-0.5"
               >
                 Subscribe
               </button>
