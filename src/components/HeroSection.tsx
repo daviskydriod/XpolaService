@@ -1,6 +1,7 @@
-import { ArrowRight, ShoppingBag, FileCheck, Calendar, Network, Shield } from "lucide-react";
+import { ArrowRight, ShoppingBag, FileCheck, Calendar, Network, Shield, Sparkles } from "lucide-react";
 import { useCountry } from "@/contexts/CountryContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useState, useEffect } from "react";
 import heroBackground from "@/assets/hero-bg.jpg";
 
 // Floating particles configuration
@@ -27,6 +28,25 @@ const iconMap: Record<string, any> = {
 const HeroSection = () => {
   const { currentData } = useCountry();
   const { theme } = useTheme();
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Parallax mouse effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 20;
+      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      setMousePosition({ x, y });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  // Trigger animations on mount
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
 
   const scrollToSectors = () => {
     document.getElementById("sectors")?.scrollIntoView({ behavior: "smooth" });
@@ -42,8 +62,13 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen w-full overflow-hidden bg-background">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
+      {/* Background Image with Parallax */}
+      <div 
+        className="absolute inset-0 z-0 transition-transform duration-700 ease-out"
+        style={{
+          transform: `translate(${mousePosition.x * 0.5}px, ${mousePosition.y * 0.5}px) scale(1.1)`,
+        }}
+      >
         <img
           src={heroBackground}
           alt="Business cityscape"
@@ -55,7 +80,7 @@ const HeroSection = () => {
         />
       </div>
 
-      {/* Gradient Overlay - Light for light theme, Dark for dark theme */}
+      {/* Gradient Overlay */}
       <div
         className="absolute inset-0 z-[1]"
         style={{
@@ -65,31 +90,36 @@ const HeroSection = () => {
         }}
       />
 
-      {/* Subtle Brand Color Glow 1 */}
+      {/* Animated Brand Color Glow 1 */}
       <div
-        className="absolute w-[500px] h-[500px] z-[2]"
+        className="absolute w-[500px] h-[500px] z-[2] animate-pulse-slow"
         style={{
           left: "10%",
           top: "20%",
           background: "radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%)",
           filter: "blur(80px)",
           pointerEvents: "none",
+          transform: `translate(${mousePosition.x * 0.3}px, ${mousePosition.y * 0.3}px)`,
+          transition: "transform 0.5s ease-out",
         }}
       />
 
-      {/* Subtle Brand Color Glow 2 */}
+      {/* Animated Brand Color Glow 2 */}
       <div
-        className="absolute w-[400px] h-[400px] z-[2]"
+        className="absolute w-[400px] h-[400px] z-[2] animate-pulse-slow"
         style={{
           right: "10%",
           bottom: "20%",
           background: "radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%)",
           filter: "blur(80px)",
           pointerEvents: "none",
+          animationDelay: "1s",
+          transform: `translate(${-mousePosition.x * 0.3}px, ${-mousePosition.y * 0.3}px)`,
+          transition: "transform 0.5s ease-out",
         }}
       />
 
-      {/* Subtle Floating Particles */}
+      {/* Floating Particles with Enhanced Animation */}
       {particles.map((particle, index) => (
         <div
           key={index}
@@ -104,16 +134,39 @@ const HeroSection = () => {
             borderRadius: "50%",
             animationDelay: `${particle.delay}s`,
             animationDuration: `${4 + (index % 3)}s`,
+            boxShadow: "0 0 20px hsl(var(--primary) / 0.3)",
           }}
         />
       ))}
 
+      {/* Sparkle Effects */}
+      <div className="absolute inset-0 z-[3] overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <Sparkles
+            key={i}
+            className="absolute animate-sparkle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${12 + Math.random() * 8}px`,
+              height: `${12 + Math.random() * 8}px`,
+              color: "hsl(var(--primary))",
+              opacity: 0.3,
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${3 + i}s`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Hero Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 pt-32 md:pt-40 pb-32">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Main Heading */}
+          {/* Main Heading with Staggered Word Animation */}
           <h1
-            className="font-montserrat font-extrabold text-4xl md:text-5xl lg:text-6xl leading-tight text-foreground mb-6 animate-fade-in-up"
+            className={`font-montserrat font-extrabold text-4xl md:text-5xl lg:text-6xl leading-tight text-foreground mb-6 transition-all duration-1000 ${
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
             style={{
               textShadow: theme === 'light' 
                 ? "0 2px 20px rgba(0, 0, 0, 0.1)" 
@@ -121,61 +174,88 @@ const HeroSection = () => {
               letterSpacing: "-0.5px",
             }}
           >
-            {currentData.hero.title}
+            {currentData.hero.title.split(' ').map((word, i) => (
+              <span
+                key={i}
+                className="inline-block animate-slide-in-up"
+                style={{
+                  animationDelay: `${i * 0.1}s`,
+                  animationFillMode: 'both',
+                }}
+              >
+                {word}{' '}
+              </span>
+            ))}
           </h1>
 
-          {/* Sub-headline */}
+          {/* Sub-headline with Fade In */}
           <p
-            className="font-poppins text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 animate-fade-in-up"
+            className={`font-poppins text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-10 transition-all duration-1000 delay-500 ${
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
             style={{ 
-              animationDelay: "0.2s",
               textShadow: theme === 'light' ? "none" : "0 2px 10px rgba(0, 0, 0, 0.5)",
             }}
           >
             {currentData.hero.subtitle}
           </p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons with Bounce Animation */}
           <div
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in-up"
-            style={{ animationDelay: "0.4s" }}
+            className={`flex flex-col sm:flex-row gap-4 justify-center mb-12 transition-all duration-1000 delay-700 ${
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+            }`}
           >
             <button 
               onClick={scrollToSectors} 
-              className="btn-primary group"
+              className="btn-primary group relative overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-2xl animate-bounce-in"
+              style={{ animationDelay: "0.8s" }}
             >
-              {currentData.hero.cta1}
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <span className="relative z-10 flex items-center gap-2">
+                {currentData.hero.cta1}
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-2 duration-300" />
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
             </button>
+            
             <button 
               onClick={scrollToShop} 
-              className="btn-secondary group"
+              className="btn-secondary group transform hover:scale-105 transition-all duration-300 hover:shadow-xl animate-bounce-in"
+              style={{ animationDelay: "1s" }}
             >
-              {currentData.hero.cta2}
-              <ShoppingBag className="w-4 h-4" />
+              <span className="flex items-center gap-2">
+                {currentData.hero.cta2}
+                <ShoppingBag className="w-4 h-4 transition-transform group-hover:rotate-12 duration-300" />
+              </span>
             </button>
+            
             <button 
               onClick={scrollToContact} 
-              className="btn-secondary"
+              className="btn-secondary transform hover:scale-105 transition-all duration-300 hover:shadow-xl animate-bounce-in"
+              style={{ animationDelay: "1.2s" }}
             >
               {currentData.hero.cta3}
             </button>
           </div>
 
-          {/* Trust Badges */}
+          {/* Trust Badges with Staggered Scale Animation */}
           <div
-            className="flex flex-wrap justify-center gap-4 md:gap-8 animate-fade-in-up"
-            style={{ animationDelay: "0.6s" }}
+            className="flex flex-wrap justify-center gap-4 md:gap-8"
           >
             {currentData.hero.trustBadges.map((badge, index) => {
               const Icon = iconMap[badge.icon];
               return (
                 <div
                   key={index}
-                  className="trust-badge w-28 md:w-32 h-20 md:h-24"
-                  style={{ animationDelay: `${0.7 + index * 0.1}s` }}
+                  className={`trust-badge w-28 md:w-32 h-20 md:h-24 transform hover:scale-110 hover:-rotate-2 transition-all duration-300 cursor-pointer animate-scale-in ${
+                    isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                  }`}
+                  style={{ 
+                    animationDelay: `${1.4 + index * 0.15}s`,
+                    transitionDelay: `${1.4 + index * 0.15}s`,
+                  }}
                 >
-                  <Icon className="w-7 h-7 text-primary mb-2" />
+                  <Icon className="w-7 h-7 text-primary mb-2 animate-pulse" />
                   <span className="font-poppins font-semibold text-[10px] md:text-xs text-foreground uppercase tracking-wide text-center">
                     {badge.label}
                   </span>
@@ -185,13 +265,131 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <div className="scroll-indicator w-6 h-10 flex justify-center pt-2">
-            <div className="scroll-indicator-dot w-1.5 h-3" />
+        {/* Animated Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce-slow">
+          <div className="scroll-indicator w-6 h-10 flex justify-center pt-2 relative">
+            <div className="scroll-indicator-dot w-1.5 h-3 animate-scroll-down" />
           </div>
+          <p className="text-xs text-muted-foreground mt-2 animate-pulse">Scroll Down</p>
         </div>
       </div>
+
+      {/* Add these styles to your globals.css */}
+      <style>{`
+        @keyframes slide-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes bounce-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.3) translateY(20px);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+          70% {
+            transform: scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.5) rotate(-10deg);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes sparkle {
+          0%, 100% {
+            opacity: 0;
+            transform: scale(0) rotate(0deg);
+          }
+          50% {
+            opacity: 0.6;
+            transform: scale(1) rotate(180deg);
+          }
+        }
+
+        @keyframes pulse-slow {
+          0%, 100% {
+            opacity: 0.5;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.8;
+            transform: scale(1.1);
+          }
+        }
+
+        @keyframes bounce-slow {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+
+        @keyframes scroll-down {
+          0% {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+        }
+
+        .animate-slide-in-up {
+          animation: slide-in-up 0.8s ease-out;
+        }
+
+        .animate-bounce-in {
+          animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+          animation-fill-mode: both;
+        }
+
+        .animate-scale-in {
+          animation: scale-in 0.6s ease-out;
+          animation-fill-mode: both;
+        }
+
+        .animate-sparkle {
+          animation: sparkle 4s ease-in-out infinite;
+        }
+
+        .animate-pulse-slow {
+          animation: pulse-slow 4s ease-in-out infinite;
+        }
+
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+
+        .animate-scroll-down {
+          animation: scroll-down 2s ease-in-out infinite;
+        }
+      `}</style>
     </section>
   );
 };
