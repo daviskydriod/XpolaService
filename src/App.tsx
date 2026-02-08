@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { CountryProvider } from '@/contexts/CountryContext';
-import CountryRouteWrapper from '@/components/common/CountryRouteWrapper';
+import CountryRouteWrapper from '@/components/CountryRouteWrapper';
 import Index from '@/pages/Index';
 import Services from '@/pages/Services';
 import About from '@/pages/About';
