@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { CountryProvider } from '@/contexts/CountryContext';
 import Index from '@/pages/Index';
@@ -23,8 +23,6 @@ import LogisticsCanada from '@/pages/canada/LogisticsService';
 import TradeCanada from '@/pages/canada/TradeService';
 import CommunityCanada from '@/pages/canada/CommunityService';
 
-
-
 import './styles/globals.css';
 
 const App = () => {
@@ -33,20 +31,12 @@ const App = () => {
       <CountryProvider>
         <BrowserRouter>
           <Routes>
-            {/* Global Home Page */}
+            {/* Main Pages */}
             <Route path="/" element={<Index />} />
-            
-            {/* Global Main Pages */}
             <Route path="/services" element={<Services />} />
             <Route path="/about" element={<About />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/contact" element={<Contact />} />
-            
-            {/* Nigeria Routes */}
-            <Route path="/nigeria/about" element={<About />} />
-            <Route path="/nigeria/services" element={<Services />} />
-            <Route path="/nigeria/projects" element={<Projects />} />
-            <Route path="/nigeria/contact" element={<Contact />} />
             
             {/* Nigeria Service Pages */}
             <Route path="/nigeria/services/consulting" element={<ConsultingNigeria />} />
@@ -57,12 +47,6 @@ const App = () => {
             <Route path="/nigeria/services/ecommerce" element={<EcommerceNigeria />} />
             <Route path="/nigeria/services/logistics" element={<LogisticsNigeria />} />
             
-            {/* Canada Routes */}
-            <Route path="/canada/about" element={<About />} />
-            <Route path="/canada/services" element={<Services />} />
-            <Route path="/canada/projects" element={<Projects />} />
-            <Route path="/canada/contact" element={<Contact />} />
-            
             {/* Canada Service Pages */}
             <Route path="/canada/services/consulting" element={<ConsultingCanada />} />
             <Route path="/canada/services/operations" element={<OperationsCanada />} />
@@ -71,7 +55,7 @@ const App = () => {
             <Route path="/canada/services/community" element={<CommunityCanada />} />
             
             {/* 404 - Catch all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Index />} />
           </Routes>
         </BrowserRouter>
       </CountryProvider>
