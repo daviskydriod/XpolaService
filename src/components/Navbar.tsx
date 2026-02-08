@@ -2,6 +2,7 @@
 // Place this file at: src/components/common/Navbar.tsx
 
 import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Moon, Sun, ChevronDown } from "lucide-react";
 import { useCountry } from "@/contexts/CountryContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -9,11 +10,11 @@ import logoWhite from "@/assets/logo-white.png";
 import logoBlack from "@/assets/logo-black.png";
 
 const navLinks = [
-  { label: "Home", href: "#" },
-  { label: "Services", href: "#sectors" },
-  { label: "About", href: "#about" },
-  { label: "Projects", href: "#projects" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
+  { label: "About", href: "/about" },
+  { label: "Projects", href: "/projects" },
+  { label: "Contact", href: "/contact" },
 ];
 
 const countries = [
@@ -27,6 +28,7 @@ const Navbar = () => {
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const { selectedCountry, setSelectedCountry } = useCountry();
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,10 +39,19 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
   const currentCountry = countries.find(c => c.code === selectedCountry);
   
   // Use white logo for dark theme, black logo for light theme
   const currentLogo = theme === 'dark' ? logoWhite : logoBlack;
+
+  const isActivePage = (href: string) => {
+    if (href === '/') return location.pathname === '/';
+    return location.pathname.startsWith(href);
+  };
 
   return (
     <nav
@@ -53,24 +64,26 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <a href="#" className="flex items-center">
+          <Link to="/" className="flex items-center">
             <img 
               src={currentLogo} 
               alt="Xpola" 
               className="h-8 md:h-10 transition-opacity duration-300" 
             />
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link, index) => (
-              <a
+              <Link
                 key={index}
-                href={link.href}
-                className="font-poppins text-sm text-muted-foreground transition-colors duration-200 hover:text-primary"
+                to={link.href}
+                className={`font-poppins text-sm transition-colors duration-200 hover:text-primary ${
+                  isActivePage(link.href) ? 'text-primary font-semibold' : 'text-muted-foreground'
+                }`}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -128,12 +141,12 @@ const Navbar = () => {
 
             {/* CTA Button */}
             <div className="hidden md:block">
-              <a
-                href="#contact"
+              <Link
+                to="/contact"
                 className="font-poppins font-semibold text-sm text-white bg-primary hover:bg-primary/90 px-6 py-2.5 rounded-lg transition-all duration-300 hover:scale-105"
               >
                 Get Started
-              </a>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -156,22 +169,22 @@ const Navbar = () => {
         <div className="lg:hidden bg-background/98 backdrop-blur-md border-t border-border">
           <div className="container mx-auto px-4 py-6 space-y-4">
             {navLinks.map((link, index) => (
-              <a
+              <Link
                 key={index}
-                href={link.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block font-poppins text-base text-muted-foreground transition-colors duration-200 hover:text-primary py-2"
+                to={link.href}
+                className={`block font-poppins text-base transition-colors duration-200 hover:text-primary py-2 ${
+                  isActivePage(link.href) ? 'text-primary font-semibold' : 'text-muted-foreground'
+                }`}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
-            <a
-              href="#contact"
-              onClick={() => setIsMobileMenuOpen(false)}
+            <Link
+              to="/contact"
               className="block font-poppins font-semibold text-center text-white bg-primary hover:bg-primary/90 px-6 py-3 rounded-lg transition-all duration-300 mt-4"
             >
               Get Started
-            </a>
+            </Link>
           </div>
         </div>
       )}
