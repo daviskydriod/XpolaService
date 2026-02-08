@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { Menu, X, Moon, Sun, ChevronDown } from "lucide-react";
 import { useCountry } from "@/contexts/CountryContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import logo from "@/assets/logo-white.png";
+import logoWhite from "@/assets/logo-white.png";
+import logoBlack from "@/assets/logo-black.png";
 
 const navLinks = [
   { label: "Home", href: "#" },
@@ -37,6 +38,9 @@ const Navbar = () => {
   }, []);
 
   const currentCountry = countries.find(c => c.code === selectedCountry);
+  
+  // Use white logo for dark theme, black logo for light theme
+  const currentLogo = theme === 'dark' ? logoWhite : logoBlack;
 
   return (
     <nav
@@ -50,7 +54,11 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <a href="#" className="flex items-center">
-            <img src={logo} alt="Xpola" className="h-8 md:h-10" />
+            <img 
+              src={currentLogo} 
+              alt="Xpola" 
+              className="h-8 md:h-10 transition-opacity duration-300" 
+            />
           </a>
 
           {/* Desktop Navigation */}
@@ -122,7 +130,7 @@ const Navbar = () => {
             <div className="hidden md:block">
               <a
                 href="#contact"
-                className="font-poppins font-semibold text-sm text-foreground bg-primary hover:bg-primary/80 px-6 py-2.5 rounded-lg transition-all duration-300 hover:scale-105"
+                className="font-poppins font-semibold text-sm text-white bg-primary hover:bg-primary/90 px-6 py-2.5 rounded-lg transition-all duration-300 hover:scale-105"
               >
                 Get Started
               </a>
@@ -160,7 +168,7 @@ const Navbar = () => {
             <a
               href="#contact"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="block font-poppins font-semibold text-center text-foreground bg-primary hover:bg-primary/80 px-6 py-3 rounded-lg transition-all duration-300 mt-4"
+              className="block font-poppins font-semibold text-center text-white bg-primary hover:bg-primary/90 px-6 py-3 rounded-lg transition-all duration-300 mt-4"
             >
               Get Started
             </a>
