@@ -48,7 +48,7 @@ const SectorsSection = () => {
 
   return (
     <section id="sectors" className="py-20 bg-background-secondary">
-      <div className="section-divider mb-16" />
+      <div className="section-divider mb-16"></div>
 
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
@@ -121,7 +121,7 @@ const SectorCard = ({ sector, index, getImage }: SectorCardProps) => {
               : 'linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.8) 100%)',
             opacity: theme === 'light' ? 0.7 : 0.9,
           }}
-        />
+        ></div>
       </div>
 
       <div className="absolute left-6 top-40 z-10 w-16 h-16 bg-background border-2 border-primary rounded-xl flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
