@@ -82,11 +82,9 @@ const ContactCard = ({ card }: ContactCardProps) => {
       <div className="icon-container mb-5">
         <Icon className="w-8 h-8 text-primary" />
       </div>
-
       <h3 className="font-montserrat font-bold text-base text-foreground uppercase tracking-wider mb-3">
         {card.label}
       </h3>
-
       <div className="space-y-1">
         {card.lines.map((line, index) => (
           <p key={index} className="font-poppins text-sm text-muted-foreground">
