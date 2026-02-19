@@ -13,8 +13,10 @@ import About from '@/pages/About';
 import Projects from '@/pages/Projects';
 import Contact from '@/pages/Contact';
 
-// Shop & Admin pages
+// Shop, Checkout & Admin pages
 import Shop from '@/pages/Shop';
+import Checkout from '@/pages/Checkout';
+import OrderSuccess from '@/pages/OrderSuccess';
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 
@@ -51,6 +53,10 @@ const App = () => {
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/contact"  element={<Contact />} />
 
+                {/* ── Checkout Flow (shared across both countries) ── */}
+                <Route path="/checkout"      element={<Checkout />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+
                 {/* ── Nigeria Main Pages ── */}
                 <Route path="/nigeria"          element={<Index />} />
                 <Route path="/nigeria/about"    element={<About />} />
@@ -62,13 +68,13 @@ const App = () => {
                 <Route path="/nigeria/shop" element={<Shop />} />
 
                 {/* ── Nigeria Service Pages ── */}
-                <Route path="/nigeria/services/consulting"  element={<ConsultingNigeria />} />
-                <Route path="/nigeria/services/oil-gas"     element={<OilGasNigeria />} />
+                <Route path="/nigeria/services/consulting"   element={<ConsultingNigeria />} />
+                <Route path="/nigeria/services/oil-gas"      element={<OilGasNigeria />} />
                 <Route path="/nigeria/services/construction" element={<ConstructionNigeria />} />
-                <Route path="/nigeria/services/mining"      element={<MiningNigeria />} />
-                <Route path="/nigeria/services/commerce"    element={<CommerceNigeria />} />
-                <Route path="/nigeria/services/ecommerce"   element={<EcommerceNigeria />} />
-                <Route path="/nigeria/services/logistics"   element={<LogisticsNigeria />} />
+                <Route path="/nigeria/services/mining"       element={<MiningNigeria />} />
+                <Route path="/nigeria/services/commerce"     element={<CommerceNigeria />} />
+                <Route path="/nigeria/services/ecommerce"    element={<EcommerceNigeria />} />
+                <Route path="/nigeria/services/logistics"    element={<LogisticsNigeria />} />
 
                 {/* ── Canada Main Pages ── */}
                 <Route path="/canada"          element={<Index />} />
