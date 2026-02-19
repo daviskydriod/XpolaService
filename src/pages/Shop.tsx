@@ -1,5 +1,6 @@
 // FILE PATH: src/pages/Shop.tsx
 // Place this file at: src/pages/Shop.tsx
+import { useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -9,6 +10,8 @@ import { useCart } from '../contexts/CartContext';
 import { nigeriaProducts, canadaProducts, nigeriaCategories, canadaCategories, formatPrice, Product } from '@/data/shopData';
 
 // ─── CART DRAWER ──────────────────────────────────────────────────────────────
+const navigate = useNavigate();
+
 const CartDrawer = () => {
   const { cart, removeFromCart, updateQuantity, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
   const currency = cart[0]?.currency;
@@ -105,9 +108,16 @@ const CartDrawer = () => {
                 {currency && formatPrice(cartTotal, currency)}
               </span>
             </div>
-            <button className="w-full bg-primary text-white font-montserrat font-bold py-4 rounded-xl hover:bg-primary/90 transition-colors">
-              Proceed to Checkout
-            </button>
+     <button
+  onClick={() => {
+    setIsCartOpen(false);
+    navigate('/checkout');
+  }}
+  className="w-full bg-primary text-white font-montserrat font-bold py-4 rounded-xl hover:bg-primary/90 transition-colors"
+>
+  Proceed to Checkout
+</button>
+
             <p className="text-center text-xs text-gray-400 mt-3">Shipping & taxes calculated at checkout</p>
           </div>
         )}
