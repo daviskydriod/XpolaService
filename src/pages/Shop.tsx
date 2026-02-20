@@ -1,8 +1,9 @@
 // FILE PATH: src/pages/Shop.tsx
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import CartDrawer from '../components/CartDrawer';
 import { useCountry } from '../contexts/CountryContext';
 import { useCart } from '../contexts/CartContext';
 import {
@@ -10,8 +11,6 @@ import {
   nigeriaCategories, canadaCategories,
   formatPrice, Product,
 } from '@/data/shopData';
-
-type SortOption = 'featured' | 'price-asc' | 'price-desc' | 'rating';
 
 // ─── HERO SLIDES ──────────────────────────────────────────────────────────────
 const NIGERIA_SLIDES = [
@@ -76,14 +75,15 @@ const CANADA_SLIDES = [
   },
 ];
 
-// ─── HERO SLIDER (no arrows, no counter, no top strip) ────────────────────────
+// ─── HERO SLIDER ──────────────────────────────────────────────────────────────
 const HeroSlider = ({
   slides,
-  onCategorySelect,
+  shopPath,
 }: {
   slides: typeof NIGERIA_SLIDES;
-  onCategorySelect: (cat: string) => void;
+  shopPath: string;
 }) => {
+  const navigate = useNavigate();
   const [current, setCurrent]     = useState(0);
   const [animating, setAnimating] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -99,7 +99,6 @@ const HeroSlider = ({
 
   const next = useCallback(() => go((current + 1) % slides.length), [current, slides.length, go]);
 
-  // Auto-advance only
   useEffect(() => {
     timerRef.current = setTimeout(next, 5500);
     return () => clearTimeout(timerRef.current);
@@ -109,7 +108,6 @@ const HeroSlider = ({
 
   return (
     <div className="relative w-full overflow-hidden bg-gray-900" style={{ height: 'clamp(420px, 55vw, 660px)' }}>
-      {/* Slides */}
       {slides.map((s, i) => (
         <div key={i}
           className="absolute inset-0 transition-opacity duration-700 ease-in-out"
@@ -120,51 +118,45 @@ const HeroSlider = ({
         </div>
       ))}
 
-      {/* Gradient */}
       <div className="absolute inset-0 z-10"
         style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.28) 60%, transparent 100%)' }} />
-
-      {/* Red left accent bar */}
       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#E02020] z-20" />
 
-      {/* Content */}
       <div className="absolute inset-0 z-20 flex items-center">
         <div className="container mx-auto px-6 md:px-12">
           <div
             className="max-w-2xl transition-all duration-500"
             style={{ opacity: animating ? 0 : 1, transform: animating ? 'translateY(16px)' : 'translateY(0)' }}>
 
-            {/* Tag */}
             <div className="inline-flex items-center gap-2 bg-[#E02020] px-3 py-1.5 mb-5">
               <span className="font-montserrat font-bold text-white text-xs uppercase tracking-widest">
                 {slide.tag}
               </span>
             </div>
 
-            {/* Headline */}
             <h1 className="font-montserrat font-extrabold text-white leading-tight mb-5"
               style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', whiteSpace: 'pre-line' }}>
               {slide.headline}
             </h1>
 
-            {/* Subtext */}
             <p className="font-poppins text-gray-300 mb-8 max-w-lg leading-relaxed"
               style={{ fontSize: 'clamp(0.85rem, 1.4vw, 1.05rem)' }}>
               {slide.sub}
             </p>
 
-            {/* CTAs */}
             <div className="flex items-center gap-3 flex-wrap">
+              {/* ✅ Goes directly to category page */}
               <button
-                onClick={() => onCategorySelect(slide.category)}
+                onClick={() => navigate(`${shopPath}/categories?cat=${encodeURIComponent(slide.category)}`)}
                 className="inline-flex items-center gap-2 bg-[#E02020] text-white font-montserrat font-bold px-7 py-3.5 hover:bg-[#c01a1a] transition-all uppercase tracking-wide text-sm hover:gap-3">
                 {slide.cta}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+              {/* ✅ Goes to all categories */}
               <button
-                onClick={() => onCategorySelect('All')}
+                onClick={() => navigate(`${shopPath}/categories`)}
                 className="inline-flex items-center gap-2 border-2 border-white/50 text-white font-montserrat font-bold px-7 py-3.5 hover:border-white hover:bg-white/10 transition-all uppercase tracking-wide text-sm">
                 View All Products
               </button>
@@ -173,7 +165,6 @@ const HeroSlider = ({
         </div>
       </div>
 
-      {/* Dot indicators only (no arrows, no counter) */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
         {slides.map((_, i) => (
           <button key={i} onClick={() => go(i)}
@@ -207,86 +198,6 @@ const MarqueeStrip = ({ dark = false, items }: { dark?: boolean; items: string[]
         }
       `}</style>
     </div>
-  );
-};
-
-// ─── CART DRAWER ──────────────────────────────────────────────────────────────
-const CartDrawer = () => {
-  const navigate = useNavigate();
-  const { cart, removeFromCart, updateQuantity, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
-  const currency = cart[0]?.currency;
-
-  return (
-    <>
-      {isCartOpen && <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />}
-      <div className={`fixed top-0 right-0 h-full w-full max-w-[420px] bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="h-1 bg-[#E02020]" />
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <h2 className="font-montserrat font-bold text-lg text-gray-900">Your Cart</h2>
-            {cartCount > 0 && <span className="bg-[#E02020] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">{cartCount}</span>}
-          </div>
-          <button onClick={() => setIsCartOpen(false)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center">
-                <svg className="w-9 h-9 text-[#E02020]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-              </div>
-              <div>
-                <p className="font-montserrat font-bold text-gray-800">Cart is empty</p>
-                <p className="font-poppins text-sm text-gray-400 mt-1">Browse and add items</p>
-              </div>
-              <button onClick={() => setIsCartOpen(false)} className="bg-[#E02020] text-white font-montserrat font-bold px-6 py-2.5 text-sm uppercase tracking-wide hover:bg-[#c01a1a] transition-colors">Continue Shopping</button>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {cart.map(item => (
-                <div key={item.id} className="flex gap-3 py-4">
-                  <img src={item.image} alt={item.name} className="w-16 h-16 object-cover flex-shrink-0 rounded bg-gray-50"
-                    onError={e => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&q=80'; }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-poppins font-semibold text-sm text-gray-900 line-clamp-1">{item.name}</p>
-                    <p className="font-poppins text-xs text-[#E02020] font-semibold mt-0.5">{item.category}</p>
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-6 h-6 border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#E02020] hover:text-[#E02020] transition-colors font-bold rounded">−</button>
-                      <span className="w-6 text-center text-sm font-bold text-gray-900">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#E02020] hover:text-[#E02020] transition-colors font-bold rounded">+</button>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end justify-between">
-                    <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-[#E02020] transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                    <p className="font-montserrat font-bold text-sm text-gray-900">{formatPrice(item.price * item.quantity, item.currency)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {cart.length > 0 && (
-          <div className="px-6 py-5 border-t border-gray-100 bg-gray-50">
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-poppins text-sm text-gray-500">Subtotal</span>
-              <span className="font-montserrat font-extrabold text-xl text-gray-900">{currency && formatPrice(cartTotal, currency)}</span>
-            </div>
-            <p className="font-poppins text-xs text-gray-400 mb-4">Shipping calculated at checkout</p>
-            <button onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}
-              className="w-full bg-[#E02020] text-white font-montserrat font-bold py-3.5 uppercase tracking-widest text-sm hover:bg-[#c01a1a] transition-colors flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-              Proceed to Checkout
-            </button>
-            <button onClick={() => setIsCartOpen(false)} className="w-full text-center font-poppins text-sm text-gray-400 hover:text-gray-700 mt-2.5 transition-colors">← Continue Shopping</button>
-          </div>
-        )}
-      </div>
-    </>
   );
 };
 
@@ -354,72 +265,25 @@ const CAT_IMAGES: Record<string, string> = {
 };
 
 const TRUST_BADGES = [
-  { icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', title: 'Fast Delivery',      sub: 'Nationwide shipping'   },
-  { icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', title: 'Secure Payment', sub: 'Powered by Paystack'   },
-  { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', title: 'Verified Products', sub: 'Quality guaranteed'   },
-  { icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z', title: '24/7 Support',    sub: "We're always here"   },
+  { icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', title: 'Fast Delivery', sub: 'Nationwide shipping' },
+  { icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', title: 'Secure Payment', sub: 'Powered by Paystack' },
+  { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', title: 'Verified Products', sub: 'Quality guaranteed' },
+  { icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z', title: '24/7 Support', sub: "We're always here" },
 ];
 
-// ─── PROMO BANNER SECTION ─────────────────────────────────────────────────────
-const PromoBanners = ({ isNigeria, onCategorySelect }: { isNigeria: boolean; onCategorySelect: (cat: string) => void }) => {
+// ─── PROMO BANNERS ────────────────────────────────────────────────────────────
+const PromoBanners = ({ isNigeria, shopPath }: { isNigeria: boolean; shopPath: string }) => {
+  const navigate = useNavigate();
   const banners = isNigeria
     ? [
-        {
-          image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=900&q=90&auto=format&fit=crop',
-          tag: 'Limited Offer',
-          title: 'Construction Materials',
-          desc: 'Premium-grade cement, rebar & structural supplies at competitive bulk prices.',
-          cta: 'Shop Now',
-          category: 'Construction Materials',
-          wide: true,
-        },
-        {
-          image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&q=90&auto=format&fit=crop',
-          tag: 'New Arrivals',
-          title: 'E-Commerce & Retail',
-          desc: 'POS systems, scanners & checkout tools.',
-          cta: 'Explore',
-          category: 'E-Commerce Goods',
-          wide: false,
-        },
-        {
-          image: 'https://images.unsplash.com/photo-1497435334941-8c899a9bd0d0?w=500&q=90&auto=format&fit=crop',
-          tag: 'Best Sellers',
-          title: 'Power & Energy',
-          desc: 'Inverters, solar panels & generators.',
-          cta: 'View More',
-          category: 'General Commerce',
-          wide: false,
-        },
+        { image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=900&q=90&auto=format&fit=crop', tag: 'Limited Offer', title: 'Construction Materials', desc: 'Premium-grade cement, rebar & structural supplies at competitive bulk prices.', cta: 'Shop Now', category: 'Construction Materials' },
+        { image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=500&q=90&auto=format&fit=crop', tag: 'New Arrivals', title: 'E-Commerce & Retail', desc: 'POS systems, scanners & checkout tools.', cta: 'Explore', category: 'E-Commerce Goods' },
+        { image: 'https://images.unsplash.com/photo-1497435334941-8c899a9bd0d0?w=500&q=90&auto=format&fit=crop', tag: 'Best Sellers', title: 'Power & Energy', desc: 'Inverters, solar panels & generators.', cta: 'View More', category: 'General Commerce' },
       ]
     : [
-        {
-          image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=900&q=90&auto=format&fit=crop',
-          tag: 'Top Picks',
-          title: 'Mining Equipment',
-          desc: 'Diamond core bits, GPR systems & hydraulic splitters for rugged Canadian terrain.',
-          cta: 'Shop Now',
-          category: 'Mining Equipment',
-          wide: true,
-        },
-        {
-          image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500&q=90&auto=format&fit=crop',
-          tag: 'Featured',
-          title: 'Industrial Tools',
-          desc: 'Heavy duty compressors & welders.',
-          cta: 'Explore',
-          category: 'Industrial Supplies',
-          wide: false,
-        },
-        {
-          image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&q=90&auto=format&fit=crop',
-          tag: 'ASTM Certified',
-          title: 'Construction',
-          desc: 'Structural steel, ICF forms & more.',
-          cta: 'View More',
-          category: 'Construction Materials',
-          wide: false,
-        },
+        { image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=900&q=90&auto=format&fit=crop', tag: 'Top Picks', title: 'Mining Equipment', desc: 'Diamond core bits, GPR systems & hydraulic splitters for rugged Canadian terrain.', cta: 'Shop Now', category: 'Mining Equipment' },
+        { image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=500&q=90&auto=format&fit=crop', tag: 'Featured', title: 'Industrial Tools', desc: 'Heavy duty compressors & welders.', cta: 'Explore', category: 'Industrial Supplies' },
+        { image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=500&q=90&auto=format&fit=crop', tag: 'ASTM Certified', title: 'Construction', desc: 'Structural steel, ICF forms & more.', cta: 'View More', category: 'Construction Materials' },
       ];
 
   return (
@@ -432,14 +296,14 @@ const PromoBanners = ({ isNigeria, onCategorySelect }: { isNigeria: boolean; onC
           </div>
         </div>
 
-        {/* Banner grid: 1 wide + 2 stacked */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Wide banner */}
           {(() => {
             const b = banners[0];
             return (
-              <div className="md:col-span-2 relative overflow-hidden group cursor-pointer h-64 md:h-80"
-                onClick={() => onCategorySelect(b.category)}>
+              <div
+                className="md:col-span-2 relative overflow-hidden group cursor-pointer h-64 md:h-80"
+                onClick={() => navigate(`${shopPath}/categories?cat=${encodeURIComponent(b.category)}`)}>
                 <img src={b.image} alt={b.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   style={{ filter: 'brightness(0.55)' }}
@@ -462,8 +326,9 @@ const PromoBanners = ({ isNigeria, onCategorySelect }: { isNigeria: boolean; onC
           {/* Two stacked */}
           <div className="flex flex-col gap-4">
             {banners.slice(1).map((b, idx) => (
-              <div key={idx} className="relative overflow-hidden group cursor-pointer flex-1 min-h-[120px]"
-                onClick={() => onCategorySelect(b.category)}>
+              <div key={idx}
+                className="relative overflow-hidden group cursor-pointer flex-1 min-h-[120px]"
+                onClick={() => navigate(`${shopPath}/categories?cat=${encodeURIComponent(b.category)}`)}>
                 <img src={b.image} alt={b.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   style={{ filter: 'brightness(0.52)', minHeight: '120px' }}
@@ -491,18 +356,8 @@ const PromoBanners = ({ isNigeria, onCategorySelect }: { isNigeria: boolean; onC
 // ─── STATS BANNER ─────────────────────────────────────────────────────────────
 const StatsBanner = ({ isNigeria }: { isNigeria: boolean }) => {
   const stats = isNigeria
-    ? [
-        { value: '10,000+', label: 'Products Listed' },
-        { value: '5,000+', label: 'Happy Businesses' },
-        { value: '36', label: 'States Covered' },
-        { value: '99%', label: 'Satisfaction Rate' },
-      ]
-    : [
-        { value: '8,000+', label: 'Products Listed' },
-        { value: '3,500+', label: 'Happy Businesses' },
-        { value: '10', label: 'Provinces Covered' },
-        { value: '99%', label: 'Satisfaction Rate' },
-      ];
+    ? [{ value: '10,000+', label: 'Products Listed' }, { value: '5,000+', label: 'Happy Businesses' }, { value: '36', label: 'States Covered' }, { value: '99%', label: 'Satisfaction Rate' }]
+    : [{ value: '8,000+', label: 'Products Listed' }, { value: '3,500+', label: 'Happy Businesses' }, { value: '10', label: 'Provinces Covered' }, { value: '99%', label: 'Satisfaction Rate' }];
 
   return (
     <section className="bg-gray-900 py-12">
@@ -523,30 +378,10 @@ const StatsBanner = ({ isNigeria }: { isNigeria: boolean }) => {
 // ─── HOW IT WORKS ─────────────────────────────────────────────────────────────
 const HowItWorks = () => {
   const steps = [
-    {
-      num: '01',
-      icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
-      title: 'Browse & Discover',
-      desc: 'Explore thousands of industrial, commercial and construction products across our catalogue.',
-    },
-    {
-      num: '02',
-      icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z',
-      title: 'Add to Cart',
-      desc: 'Select your items, choose quantities and add them to your cart with a single click.',
-    },
-    {
-      num: '03',
-      icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
-      title: 'Secure Checkout',
-      desc: 'Pay safely via Paystack with multiple payment options. Your transaction is always protected.',
-    },
-    {
-      num: '04',
-      icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
-      title: 'Fast Delivery',
-      desc: 'Your order is processed and shipped quickly. Track every step from warehouse to doorstep.',
-    },
+    { num: '01', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', title: 'Browse & Discover', desc: 'Explore thousands of industrial, commercial and construction products across our catalogue.' },
+    { num: '02', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', title: 'Add to Cart', desc: 'Select your items, choose quantities and add them to your cart with a single click.' },
+    { num: '03', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z', title: 'Secure Checkout', desc: 'Pay safely via Paystack with multiple payment options. Your transaction is always protected.' },
+    { num: '04', icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', title: 'Fast Delivery', desc: 'Your order is processed and shipped quickly. Track every step from warehouse to doorstep.' },
   ];
 
   return (
@@ -557,13 +392,11 @@ const HowItWorks = () => {
           <h2 className="font-montserrat font-extrabold text-2xl md:text-3xl text-gray-900">How It Works</h2>
           <p className="font-poppins text-sm text-gray-500 mt-2 max-w-md mx-auto">From browsing to delivery — a seamless experience built for businesses.</p>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {steps.map((step, i) => (
             <div key={step.num} className="relative">
-              {/* connector line */}
               {i < steps.length - 1 && (
-                <div className="hidden md:block absolute top-8 left-[calc(50%+28px)] right-[-calc(50%-28px)] h-px bg-gray-200 z-0" style={{ width: 'calc(100% - 56px)', left: 'calc(50% + 28px)' }} />
+                <div className="hidden md:block absolute top-8 h-px bg-gray-200 z-0" style={{ width: 'calc(100% - 56px)', left: 'calc(50% + 28px)' }} />
               )}
               <div className="flex flex-col items-center text-center relative z-10">
                 <div className="w-16 h-16 bg-red-50 border-2 border-[#E02020]/20 flex items-center justify-center mb-4 relative">
@@ -583,7 +416,7 @@ const HowItWorks = () => {
   );
 };
 
-// ─── NEWSLETTER / BULK ORDER BANNER ──────────────────────────────────────────
+// ─── BULK ORDER BANNER ────────────────────────────────────────────────────────
 const BulkOrderBanner = ({ isNigeria }: { isNigeria: boolean }) => (
   <section className="relative overflow-hidden py-0">
     <div className="relative">
@@ -596,7 +429,6 @@ const BulkOrderBanner = ({ isNigeria }: { isNigeria: boolean }) => (
         style={{ height: 'clamp(260px, 30vw, 400px)', filter: 'brightness(0.28)' }}
         onError={e => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80'; }}
       />
-      {/* Left red bar */}
       <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#E02020]" />
       <div className="absolute inset-0 flex items-center">
         <div className="container mx-auto px-6 md:px-12">
@@ -611,13 +443,11 @@ const BulkOrderBanner = ({ isNigeria }: { isNigeria: boolean }) => (
               </p>
             </div>
             <div className="flex flex-col gap-3 flex-shrink-0 w-full md:w-auto">
-              <a href="mailto:bulk@xpola.com"
-                className="inline-flex items-center justify-center gap-2 bg-[#E02020] text-white font-montserrat font-bold px-8 py-4 uppercase tracking-wide text-sm hover:bg-[#c01a1a] transition-all w-full md:w-auto">
+              <a href="mailto:bulk@xpola.com" className="inline-flex items-center justify-center gap-2 bg-[#E02020] text-white font-montserrat font-bold px-8 py-4 uppercase tracking-wide text-sm hover:bg-[#c01a1a] transition-all w-full md:w-auto">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 Request a Quote
               </a>
-              <a href="tel:+2340000000000"
-                className="inline-flex items-center justify-center gap-2 border-2 border-white/50 text-white font-montserrat font-bold px-8 py-4 uppercase tracking-wide text-sm hover:border-white hover:bg-white/10 transition-all w-full md:w-auto">
+              <a href="tel:+2340000000000" className="inline-flex items-center justify-center gap-2 border-2 border-white/50 text-white font-montserrat font-bold px-8 py-4 uppercase tracking-wide text-sm hover:border-white hover:bg-white/10 transition-all w-full md:w-auto">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                 Call Us Now
               </a>
@@ -633,45 +463,16 @@ const BulkOrderBanner = ({ isNigeria }: { isNigeria: boolean }) => (
 const Testimonials = ({ isNigeria }: { isNigeria: boolean }) => {
   const reviews = isNigeria
     ? [
-        { 
-          name: "Chukwuemeka O.", 
-          role: "Site Manager, Lagos", 
-          rating: 5, 
-          text: "Xpola delivered our construction materials on time and in perfect condition. The pricing is unbeatable for bulk orders. Will definitely order again." 
-        },
-        { 
-          name: "Fatima A.", 
-          role: "Procurement Officer, Abuja", 
-          rating: 5, 
-          text: "I was impressed by the quality of the oil & gas supplies. Everything was ISO certified as advertised. The support team was also very responsive." 
-        },
-        { 
-          name: "Biodun K.", 
-          role: "Business Owner, Port Harcourt", 
-          rating: 4, 
-          text: "Great platform for sourcing industrial goods. Delivery to PH was faster than expected. The Paystack integration made checkout seamless." 
-        },
+        { name: "Chukwuemeka O.", role: "Site Manager, Lagos", rating: 5, text: "Xpola delivered our construction materials on time and in perfect condition. The pricing is unbeatable for bulk orders. Will definitely order again." },
+        { name: "Fatima A.", role: "Procurement Officer, Abuja", rating: 5, text: "I was impressed by the quality of the oil & gas supplies. Everything was ISO certified as advertised. The support team was also very responsive." },
+        { name: "Biodun K.", role: "Business Owner, Port Harcourt", rating: 4, text: "Great platform for sourcing industrial goods. Delivery to PH was faster than expected. The Paystack integration made checkout seamless." },
       ]
     : [
-        { 
-          name: "James T.", 
-          role: "Mine Supervisor, Alberta", 
-          rating: 5, 
-          text: "Exactly what our mining operations needed. The GPR equipment arrived in perfect condition and the ASTM certifications checked out." 
-        },
-        { 
-          name: "Sarah M.", 
-          role: "Procurement Lead, BC", 
-          rating: 5, 
-          text: "Reliable, fast and competitively priced. We've been sourcing our industrial supplies through Xpola for 6 months now. No complaints." 
-        },
-        { 
-          name: "David L.", 
-          role: "Construction Director, Ontario", 
-          rating: 4, 
-          text: "The structural steel quality exceeded our expectations. The bulk order process was smooth and the team was very helpful throughout." 
-        },
+        { name: "James T.", role: "Mine Supervisor, Alberta", rating: 5, text: "Exactly what our mining operations needed. The GPR equipment arrived in perfect condition and the ASTM certifications checked out." },
+        { name: "Sarah M.", role: "Procurement Lead, BC", rating: 5, text: "Reliable, fast and competitively priced. We've been sourcing our industrial supplies through Xpola for 6 months now. No complaints." },
+        { name: "David L.", role: "Construction Director, Ontario", rating: 4, text: "The structural steel quality exceeded our expectations. The bulk order process was smooth and the team was very helpful throughout." },
       ];
+
   return (
     <section className="py-14 bg-[#f8f8f8]">
       <div className="container mx-auto px-4">
@@ -680,11 +481,9 @@ const Testimonials = ({ isNigeria }: { isNigeria: boolean }) => {
           <h2 className="font-montserrat font-extrabold text-2xl md:text-3xl text-gray-900">What Our Customers Say</h2>
           <p className="font-poppins text-sm text-gray-500 mt-2">Trusted by thousands of businesses</p>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {reviews.map((r, i) => (
             <div key={i} className="bg-white border border-gray-100 p-6 hover:shadow-lg transition-shadow duration-300 relative">
-              {/* Quote mark */}
               <div className="absolute top-4 right-5 text-6xl font-serif text-gray-100 leading-none select-none">"</div>
               <div className="flex gap-0.5 mb-4">
                 {[...Array(5)].map((_, j) => (
@@ -695,9 +494,7 @@ const Testimonials = ({ isNigeria }: { isNigeria: boolean }) => {
               </div>
               <p className="font-poppins text-gray-600 text-sm leading-relaxed mb-5 relative z-10">"{r.text}"</p>
               <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-                <div className="w-9 h-9 bg-[#E02020] flex items-center justify-center font-montserrat font-bold text-white text-sm flex-shrink-0">
-                  {r.name[0]}
-                </div>
+                <div className="w-9 h-9 bg-[#E02020] flex items-center justify-center font-montserrat font-bold text-white text-sm flex-shrink-0">{r.name[0]}</div>
                 <div>
                   <p className="font-montserrat font-bold text-gray-900 text-sm">{r.name}</p>
                   <p className="font-poppins text-xs text-gray-400">{r.role}</p>
@@ -716,45 +513,23 @@ const Shop = () => {
   const { currentData } = useCountry();
   const { cartCount, setIsCartOpen } = useCart();
 
-  const isNigeria    = currentData.code === 'NG';
-  const allProducts  = isNigeria ? nigeriaProducts  : canadaProducts;
-  const allCats      = isNigeria ? nigeriaCategories : canadaCategories;
-  const countryName  = isNigeria ? 'Nigeria' : 'Canada';
-  const slides       = isNigeria ? NIGERIA_SLIDES : CANADA_SLIDES;
-  const shopPath     = isNigeria ? '/nigeria/shop' : '/canada/shop';
-
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [searchFocused,     setSearchFocused]    = useState(false);
-  const [searchQuery,       setSearchQuery]      = useState('');
-  const searchRef = useRef<HTMLDivElement>(null);
+  const isNigeria   = currentData.code === 'NG';
+  const allProducts = isNigeria ? nigeriaProducts : canadaProducts;
+  const allCats     = isNigeria ? nigeriaCategories : canadaCategories;
+  const countryName = isNigeria ? 'Nigeria' : 'Canada';
+  const slides      = isNigeria ? NIGERIA_SLIDES : CANADA_SLIDES;
+  const shopPath    = isNigeria ? '/nigeria/shop' : '/canada/shop';
 
   const featured = allProducts.filter(p => p.featured);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchFocused(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const scrollToProducts = () => {
-    document.getElementById('featured-products')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleCategorySelect = (cat: string) => {
-    setSelectedCategory(cat);
-    scrollToProducts();
-  };
 
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
       <Navbar />
       <CartDrawer />
 
-      {/* ── Sliding Hero (NO strip above, NO nav arrows, NO counter) ── */}
       <div className="pt-[72px]">
-        <HeroSlider slides={slides} onCategorySelect={handleCategorySelect} />
+        {/* ✅ Hero now navigates to category pages */}
+        <HeroSlider slides={slides} shopPath={shopPath} />
       </div>
 
       {/* ── Trust Badges ── */}
@@ -794,7 +569,10 @@ const Shop = () => {
             {allCats.filter(c => c !== 'All').map(cat => {
               const count = allProducts.filter(p => p.category === cat).length;
               return (
-                <Link key={cat} to={`${shopPath}/categories`} onClick={() => setSelectedCategory(cat)}
+                // ✅ Each category card now links directly to its filtered category page
+                <Link
+                  key={cat}
+                  to={`${shopPath}/categories?cat=${encodeURIComponent(cat)}`}
                   className="group relative overflow-hidden block">
                   <div className="relative h-36 md:h-44 overflow-hidden">
                     <img src={CAT_IMAGES[cat] || CAT_IMAGES['default']} alt={cat}
@@ -825,7 +603,7 @@ const Shop = () => {
               <h2 className="font-montserrat font-extrabold text-2xl text-gray-900">Featured Products</h2>
               <p className="font-poppins text-sm text-gray-500 mt-0.5">Handpicked for {countryName}</p>
             </div>
-            <Link to={`${shopPath}/all`} className="font-poppins text-sm text-[#E02020] font-semibold hover:underline flex items-center gap-1">
+            <Link to={`${shopPath}/categories`} className="font-poppins text-sm text-[#E02020] font-semibold hover:underline flex items-center gap-1">
               View All <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </Link>
           </div>
@@ -837,10 +615,9 @@ const Shop = () => {
         </div>
       </section>
 
-      {/* ── Promo Banners ── */}
-      <PromoBanners isNigeria={isNigeria} onCategorySelect={handleCategorySelect} />
+      {/* ✅ PromoBanners now receives shopPath for correct navigation */}
+      <PromoBanners isNigeria={isNigeria} shopPath={shopPath} />
 
-      {/* ── Stats Banner ── */}
       <StatsBanner isNigeria={isNigeria} />
 
       {/* ── Top Rated Products ── */}
@@ -851,7 +628,7 @@ const Shop = () => {
               <h2 className="font-montserrat font-extrabold text-2xl text-gray-900">Top Rated</h2>
               <p className="font-poppins text-sm text-gray-500 mt-0.5">Loved by customers across {countryName}</p>
             </div>
-            <Link to={`${shopPath}/all`} className="font-poppins text-sm text-[#E02020] font-semibold hover:underline flex items-center gap-1">
+            <Link to={`${shopPath}/categories`} className="font-poppins text-sm text-[#E02020] font-semibold hover:underline flex items-center gap-1">
               See More <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </Link>
           </div>
@@ -863,16 +640,9 @@ const Shop = () => {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
       <HowItWorks />
-
-      {/* ── Bulk Order Banner ── */}
       <BulkOrderBanner isNigeria={isNigeria} />
-
-      {/* ── Red promo marquee ── */}
-      <MarqueeStrip items={['⚡ Bulk Orders Welcome', 'Request a Quote', `Quality Guaranteed`, `Fast ${countryName} Delivery`, '🔒 Paystack Secure']} />
-
-      {/* ── Testimonials ── */}
+      <MarqueeStrip items={['⚡ Bulk Orders Welcome', 'Request a Quote', 'Quality Guaranteed', `Fast ${countryName} Delivery`, '🔒 Paystack Secure']} />
       <Testimonials isNigeria={isNigeria} />
 
       {/* Cart FAB */}
