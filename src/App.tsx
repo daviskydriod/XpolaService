@@ -41,87 +41,69 @@ import CommunityCanada  from '@/pages/canada/CommunityService';
 
 import './styles/globals.css';
 
-const App = () => {
-  return (
-    // ✅ CORRECT nesting order:
-    // 1. ThemeProvider    — no router dependency, outermost is fine
-    // 2. BrowserRouter   — must wrap EVERYTHING that uses routing hooks
-    // 3. CountryProvider — uses useLocation(), must be inside BrowserRouter
-    // 4. CartProvider    — may use useLocation() indirectly via Country
-    // 5. AdminProvider   — same as above
-    <ThemeProvider>
-      <BrowserRouter>
-        <CountryProvider>
-          <CartProvider>
-            <AdminProvider>
-              <Routes>
+const App = () => (
+  <ThemeProvider>
+    <BrowserRouter>
+      <CountryProvider>
+        <CartProvider>
+          <AdminProvider>
+            <Routes>
 
-                {/* ── Global Pages ── */}
-                <Route path="/"         element={<Index />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/about"    element={<About />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/contact"  element={<Contact />} />
+              {/* ── Global Pages ── */}
+              <Route path="/"         element={<Index />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/about"    element={<About />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/contact"  element={<Contact />} />
 
-                {/* ── Shared Shop Routes ── */}
-                <Route path="/shop/product/:id" element={<ProductDetail />} />
+              {/* ── Shop / Checkout ── */}
+              <Route path="/shop/product/:id" element={<ProductDetail />} />
+              <Route path="/checkout"         element={<Checkout />} />
+              <Route path="/order-success"    element={<OrderSuccess />} />
 
-                {/* ── Checkout Flow ── */}
-                <Route path="/checkout"      element={<Checkout />} />
-                <Route path="/order-success" element={<OrderSuccess />} />
+              {/* ── Nigeria ── */}
+              <Route path="/nigeria"                       element={<Index />} />
+              <Route path="/nigeria/about"                 element={<About />} />
+              <Route path="/nigeria/services"              element={<Services />} />
+              <Route path="/nigeria/projects"              element={<Projects />} />
+              <Route path="/nigeria/contact"               element={<Contact />} />
+              <Route path="/nigeria/shop"                  element={<Shop />} />
+              <Route path="/nigeria/shop/categories"       element={<ShopCategory />} />
+              <Route path="/nigeria/services/consulting"   element={<ConsultingNigeria />} />
+              <Route path="/nigeria/services/oil-gas"      element={<OilGasNigeria />} />
+              <Route path="/nigeria/services/construction" element={<ConstructionNigeria />} />
+              <Route path="/nigeria/services/mining"       element={<MiningNigeria />} />
+              <Route path="/nigeria/services/commerce"     element={<CommerceNigeria />} />
+              <Route path="/nigeria/services/ecommerce"    element={<EcommerceNigeria />} />
+              <Route path="/nigeria/services/logistics"    element={<LogisticsNigeria />} />
 
-                {/* ─────────── NIGERIA ─────────── */}
-                <Route path="/nigeria"          element={<Index />} />
-                <Route path="/nigeria/about"    element={<About />} />
-                <Route path="/nigeria/services" element={<Services />} />
-                <Route path="/nigeria/projects" element={<Projects />} />
-                <Route path="/nigeria/contact"  element={<Contact />} />
+              {/* ── Canada ── */}
+              <Route path="/canada"                        element={<Index />} />
+              <Route path="/canada/about"                  element={<About />} />
+              <Route path="/canada/services"               element={<Services />} />
+              <Route path="/canada/projects"               element={<Projects />} />
+              <Route path="/canada/contact"                element={<Contact />} />
+              <Route path="/canada/shop"                   element={<Shop />} />
+              <Route path="/canada/shop/categories"        element={<ShopCategory />} />
+              <Route path="/canada/services/consulting"    element={<ConsultingCanada />} />
+              <Route path="/canada/services/operations"    element={<OperationsCanada />} />
+              <Route path="/canada/services/logistics"     element={<LogisticsCanada />} />
+              <Route path="/canada/services/trade"         element={<TradeCanada />} />
+              <Route path="/canada/services/community"     element={<CommunityCanada />} />
 
-                {/* Nigeria Shop */}
-                <Route path="/nigeria/shop"            element={<Shop />} />
-                <Route path="/nigeria/shop/categories" element={<ShopCategory />} />
+              {/* ── Admin ── */}
+              <Route path="/admin"           element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-                {/* Nigeria Services */}
-                <Route path="/nigeria/services/consulting"   element={<ConsultingNigeria />} />
-                <Route path="/nigeria/services/oil-gas"      element={<OilGasNigeria />} />
-                <Route path="/nigeria/services/construction" element={<ConstructionNigeria />} />
-                <Route path="/nigeria/services/mining"       element={<MiningNigeria />} />
-                <Route path="/nigeria/services/commerce"     element={<CommerceNigeria />} />
-                <Route path="/nigeria/services/ecommerce"    element={<EcommerceNigeria />} />
-                <Route path="/nigeria/services/logistics"    element={<LogisticsNigeria />} />
+              {/* ── 404 fallback ── */}
+              <Route path="*" element={<Navigate to="/" replace />} />
 
-                {/* ─────────── CANADA ─────────── */}
-                <Route path="/canada"          element={<Index />} />
-                <Route path="/canada/about"    element={<About />} />
-                <Route path="/canada/services" element={<Services />} />
-                <Route path="/canada/projects" element={<Projects />} />
-                <Route path="/canada/contact"  element={<Contact />} />
-
-                {/* Canada Shop */}
-                <Route path="/canada/shop"            element={<Shop />} />
-                <Route path="/canada/shop/categories" element={<ShopCategory />} />
-
-                {/* Canada Services */}
-                <Route path="/canada/services/consulting" element={<ConsultingCanada />} />
-                <Route path="/canada/services/operations" element={<OperationsCanada />} />
-                <Route path="/canada/services/logistics"  element={<LogisticsCanada />} />
-                <Route path="/canada/services/trade"      element={<TradeCanada />} />
-                <Route path="/canada/services/community"  element={<CommunityCanada />} />
-
-                {/* ── Admin ── */}
-                <Route path="/admin"           element={<AdminLogin />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
-                {/* ── 404 ── */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-
-              </Routes>
-            </AdminProvider>
-          </CartProvider>
-        </CountryProvider>
-      </BrowserRouter>
-    </ThemeProvider>
-  );
-};
+            </Routes>
+          </AdminProvider>
+        </CartProvider>
+      </CountryProvider>
+    </BrowserRouter>
+  </ThemeProvider>
+);
 
 export default App;
