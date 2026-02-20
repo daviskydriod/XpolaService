@@ -1,9 +1,9 @@
 // FILE PATH: src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider }  from '@/contexts/ThemeContext';
+import { ThemeProvider }   from '@/contexts/ThemeContext';
 import { CountryProvider } from '@/contexts/CountryContext';
-import { CartProvider }   from '@/contexts/CartContext';
-import { AdminProvider }  from '@/contexts/AdminContext';
+import { CartProvider }    from '@/contexts/CartContext';
+import { AdminProvider }   from '@/contexts/AdminContext';
 
 // Global pages
 import Index    from '@/pages/Index';
@@ -24,13 +24,13 @@ import AdminLogin     from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 
 // Nigeria service pages
-import ConsultingNigeria  from '@/pages/nigeria/ConsultingService';
-import OilGasNigeria      from '@/pages/nigeria/OilGasService';
+import ConsultingNigeria   from '@/pages/nigeria/ConsultingService';
+import OilGasNigeria       from '@/pages/nigeria/OilGasService';
 import ConstructionNigeria from '@/pages/nigeria/ConstructionService';
-import MiningNigeria      from '@/pages/nigeria/MiningService';
-import CommerceNigeria    from '@/pages/nigeria/CommerceService';
-import EcommerceNigeria   from '@/pages/nigeria/EcommerceService';
-import LogisticsNigeria   from '@/pages/nigeria/LogisticsService';
+import MiningNigeria       from '@/pages/nigeria/MiningService';
+import CommerceNigeria     from '@/pages/nigeria/CommerceService';
+import EcommerceNigeria    from '@/pages/nigeria/EcommerceService';
+import LogisticsNigeria    from '@/pages/nigeria/LogisticsService';
 
 // Canada service pages
 import ConsultingCanada from '@/pages/canada/ConsultingService';
@@ -43,11 +43,15 @@ import './styles/globals.css';
 
 const App = () => {
   return (
+    // ✅ FIXED: BrowserRouter now wraps ALL providers.
+    // Previously AdminProvider and CartProvider were ABOVE BrowserRouter —
+    // that caused the useContext null crash because they (or their children)
+    // call routing hooks (useNavigate, useLocation) before a Router exists.
     <ThemeProvider>
-      <AdminProvider>
-        <CartProvider>
-          <BrowserRouter>
-            <CountryProvider>
+      <BrowserRouter>
+        <CountryProvider>
+          <CartProvider>
+            <AdminProvider>
               <Routes>
 
                 {/* ── Global Pages ── */}
@@ -57,7 +61,7 @@ const App = () => {
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/contact"  element={<Contact />} />
 
-                {/* ── Shared Shop Routes (product detail works from either store) ── */}
+                {/* ── Shared Shop Routes ── */}
                 <Route path="/shop/product/:id" element={<ProductDetail />} />
 
                 {/* ── Checkout Flow ── */}
@@ -110,10 +114,10 @@ const App = () => {
                 <Route path="*" element={<Navigate to="/" replace />} />
 
               </Routes>
-            </CountryProvider>
-          </BrowserRouter>
-        </CartProvider>
-      </AdminProvider>
+            </AdminProvider>
+          </CartProvider>
+        </CountryProvider>
+      </BrowserRouter>
     </ThemeProvider>
   );
 };
