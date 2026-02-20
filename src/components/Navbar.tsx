@@ -20,7 +20,7 @@ const Navbar = () => {
   const [isMobileMenuOpen,       setIsMobileMenuOpen]       = useState(false);
   const [isCountryDropdownOpen,  setIsCountryDropdownOpen]  = useState(false);
   const [isAccountDropdownOpen,  setIsAccountDropdownOpen]  = useState(false);
-  const [isCartOpen,             setIsCartOpen]             = useState(false); // ← NEW
+  const [isCartOpen,             setIsCartOpen]             = useState(false);
 
   const { selectedCountry, setSelectedCountry } = useCountry();
   const { theme, toggleTheme }                  = useTheme();
@@ -112,17 +112,17 @@ const Navbar = () => {
             </div>
 
             {/* Right Side Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 lg:gap-3">
 
               {/* Country Selector */}
               <div className="relative">
                 <button
                   onClick={() => { setIsCountryDropdownOpen(!isCountryDropdownOpen); setIsAccountDropdownOpen(false); }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-200"
+                  className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-200"
                 >
                   <span className="text-xl">{currentCountry?.flag}</span>
-                  <span className="hidden sm:inline font-poppins text-sm text-foreground">{currentCountry?.name}</span>
-                  <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isCountryDropdownOpen ? "rotate-180" : ""}`} />
+                  <span className="hidden lg:inline font-poppins text-sm text-foreground">{currentCountry?.name}</span>
+                  <ChevronDown className={`hidden lg:block w-4 h-4 text-muted-foreground transition-transform ${isCountryDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {isCountryDropdownOpen && (
@@ -157,7 +157,7 @@ const Navbar = () => {
                 }
               </button>
 
-              {/* ← CHANGED: was <Link to={checkoutPath}>, now opens CartDrawer */}
+              {/* Cart Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
                 className="relative p-2 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-200"
@@ -176,17 +176,17 @@ const Navbar = () => {
                 <div className="relative" ref={accountRef}>
                   <button
                     onClick={() => { setIsAccountDropdownOpen(!isAccountDropdownOpen); setIsCountryDropdownOpen(false); }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-200"
+                    className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-200"
                   >
                     <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-[10px] font-montserrat font-bold">
                         {profile?.firstName?.[0]?.toUpperCase() ?? user.email?.[0]?.toUpperCase() ?? "U"}
                       </span>
                     </div>
-                    <span className="hidden sm:inline font-poppins text-sm text-foreground max-w-[80px] truncate">
+                    <span className="hidden lg:inline font-poppins text-sm text-foreground max-w-[80px] truncate">
                       {profile?.firstName ?? "Account"}
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isAccountDropdownOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`hidden lg:block w-4 h-4 text-muted-foreground transition-transform ${isAccountDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {isAccountDropdownOpen && (
@@ -224,15 +224,15 @@ const Navbar = () => {
               ) : (
                 <Link
                   to="/login"
-                  className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-200"
+                  className="flex items-center gap-2 px-2 lg:px-3 py-2 rounded-lg bg-background-secondary border border-border hover:border-primary transition-all duration-200"
                 >
                   <User className="w-5 h-5 text-foreground" />
-                  <span className="font-poppins text-sm text-foreground">Sign In</span>
+                  <span className="hidden lg:inline font-poppins text-sm text-foreground">Sign In</span>
                 </Link>
               )}
 
-              {/* CTA Button */}
-              <div className="hidden md:block">
+              {/* CTA Button — desktop only */}
+              <div className="hidden lg:block">
                 <Link
                   to="/contact"
                   className="font-poppins font-semibold text-sm text-white bg-primary hover:bg-primary/90 px-6 py-2.5 rounded-lg transition-all duration-300 hover:scale-105"
@@ -244,9 +244,9 @@ const Navbar = () => {
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden w-10 h-10 flex items-center justify-center text-foreground"
+                className="lg:hidden w-9 h-9 flex items-center justify-center text-foreground"
               >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -269,7 +269,7 @@ const Navbar = () => {
               ))}
 
               <div className="pt-4 space-y-2">
-                {/* ← Mobile: cart button opens drawer too */}
+                {/* Mobile: cart button opens drawer */}
                 <button
                   onClick={() => { setIsCartOpen(true); setIsMobileMenuOpen(false); }}
                   className="w-full flex items-center gap-3 font-poppins text-sm text-foreground hover:text-primary py-2.5 transition-colors border-b border-border/40"
@@ -337,3 +337,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+    
