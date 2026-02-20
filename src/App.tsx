@@ -16,8 +16,6 @@ import Contact  from '@/pages/Contact';
 import Shop          from '@/pages/Shop';
 import ShopCategory  from '@/pages/ShopCategory';
 import ProductDetail from '@/pages/ProductDetail';
-import Checkout      from '@/pages/Checkout';
-import OrderSuccess  from '@/pages/OrderSuccess';
 
 // Admin
 import AdminLogin     from '@/pages/admin/AdminLogin';
@@ -43,10 +41,6 @@ import './styles/globals.css';
 
 const App = () => {
   return (
-    // ✅ FIXED: BrowserRouter now wraps ALL providers.
-    // Previously AdminProvider and CartProvider were ABOVE BrowserRouter —
-    // that caused the useContext null crash because they (or their children)
-    // call routing hooks (useNavigate, useLocation) before a Router exists.
     <ThemeProvider>
       <BrowserRouter>
         <CountryProvider>
@@ -61,12 +55,8 @@ const App = () => {
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/contact"  element={<Contact />} />
 
-                {/* ── Shared Shop Routes ── */}
+                {/* ── Shop ── */}
                 <Route path="/shop/product/:id" element={<ProductDetail />} />
-
-                {/* ── Checkout Flow ── */}
-                <Route path="/checkout"      element={<Checkout />} />
-                <Route path="/order-success" element={<OrderSuccess />} />
 
                 {/* ─────────── NIGERIA ─────────── */}
                 <Route path="/nigeria"          element={<Index />} />
@@ -74,12 +64,8 @@ const App = () => {
                 <Route path="/nigeria/services" element={<Services />} />
                 <Route path="/nigeria/projects" element={<Projects />} />
                 <Route path="/nigeria/contact"  element={<Contact />} />
-
-                {/* Nigeria Shop */}
                 <Route path="/nigeria/shop"            element={<Shop />} />
                 <Route path="/nigeria/shop/categories" element={<ShopCategory />} />
-
-                {/* Nigeria Services */}
                 <Route path="/nigeria/services/consulting"   element={<ConsultingNigeria />} />
                 <Route path="/nigeria/services/oil-gas"      element={<OilGasNigeria />} />
                 <Route path="/nigeria/services/construction" element={<ConstructionNigeria />} />
@@ -94,12 +80,8 @@ const App = () => {
                 <Route path="/canada/services" element={<Services />} />
                 <Route path="/canada/projects" element={<Projects />} />
                 <Route path="/canada/contact"  element={<Contact />} />
-
-                {/* Canada Shop */}
                 <Route path="/canada/shop"            element={<Shop />} />
                 <Route path="/canada/shop/categories" element={<ShopCategory />} />
-
-                {/* Canada Services */}
                 <Route path="/canada/services/consulting" element={<ConsultingCanada />} />
                 <Route path="/canada/services/operations" element={<OperationsCanada />} />
                 <Route path="/canada/services/logistics"  element={<LogisticsCanada />} />
