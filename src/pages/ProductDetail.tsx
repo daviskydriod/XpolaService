@@ -1,9 +1,9 @@
 // FILE PATH: src/pages/ProductDetail.tsx
-// Place this file at: src/pages/ProductDetail.tsx
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import CartDrawer from '../components/CartDrawer';
 import { useCountry } from '../contexts/CountryContext';
 import { useCart } from '../contexts/CartContext';
 import {
@@ -63,28 +63,28 @@ const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentData } = useCountry();
-  const { addToCart, setIsCartOpen } = useCart();
+  const { addToCart, setIsCartOpen, cartCount } = useCart();
 
   const isNigeria   = currentData.code === 'NG';
   const allProducts = isNigeria ? nigeriaProducts : canadaProducts;
   const shopPath    = isNigeria ? '/nigeria/shop' : '/canada/shop';
   const countryName = isNigeria ? 'Nigeria' : 'Canada';
 
-  // Find product across both stores (so direct URL works for either)
   const product = [...nigeriaProducts, ...canadaProducts].find(p => p.id === id);
 
-  const [qty,      setQty]      = useState(1);
-  const [adding,   setAdding]   = useState(false);
-  const [added,    setAdded]    = useState(false);
+  const [qty,       setQty]       = useState(1);
+  const [adding,    setAdding]    = useState(false);
+  const [added,     setAdded]     = useState(false);
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'shipping'>('description');
+  const [activeImg, setActiveImg] = useState(0);
 
-  // Scroll to top on product change
   useEffect(() => { window.scrollTo({ top: 0 }); }, [id]);
 
   if (!product) {
     return (
       <div className="min-h-screen bg-white">
         <Navbar />
+        <CartDrawer />
         <div className="container mx-auto px-4 pt-40 pb-20 text-center">
           <div className="w-20 h-20 bg-red-50 flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10 text-[#E02020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,13 +123,11 @@ const ProductDetail = () => {
     navigate('/checkout');
   };
 
-  // Fake extra images using same image at different crops
   const images = [
     product.image,
     `${product.image.split('?')[0]}?w=400&q=80&crop=top`,
     `${product.image.split('?')[0]}?w=400&q=80&crop=center`,
   ];
-  const [activeImg, setActiveImg] = useState(0);
 
   const SPECS: Record<string, string> = product.country === 'nigeria'
     ? { Standard: 'ISO / ANSI Certified', Origin: 'Verified Supplier', Warranty: '12 months', Country: 'Nigeria', Currency: 'NGN (₦)' }
@@ -138,6 +136,7 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
       <Navbar />
+      <CartDrawer />
 
       <div className="pt-[72px]">
 
@@ -162,7 +161,6 @@ const ProductDetail = () => {
 
             {/* Left — Image gallery */}
             <div>
-              {/* Main image */}
               <div className="relative overflow-hidden bg-gray-50 mb-3" style={{ paddingBottom: '72%' }}>
                 <img
                   src={images[activeImg]}
@@ -170,7 +168,6 @@ const ProductDetail = () => {
                   className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
                   onError={e => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600&q=80'; }}
                 />
-                {/* Badges */}
                 <div className="absolute top-4 left-4 flex flex-col gap-1.5">
                   {product.featured && (
                     <span className="bg-amber-500 text-white text-xs font-bold px-2.5 py-1 uppercase tracking-wider font-montserrat">Featured</span>
@@ -179,14 +176,12 @@ const ProductDetail = () => {
                     <span className="bg-gray-900 text-white text-xs font-bold px-2.5 py-1 uppercase tracking-wider font-montserrat">Out of Stock</span>
                   )}
                 </div>
-                {/* Zoom hint */}
                 <div className="absolute bottom-3 right-3 bg-black/40 text-white text-[10px] font-poppins px-2 py-1 flex items-center gap-1">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                   Zoom
                 </div>
               </div>
 
-              {/* Thumbnail strip */}
               <div className="flex gap-2">
                 {images.map((img, i) => (
                   <button
@@ -200,7 +195,6 @@ const ProductDetail = () => {
                 ))}
               </div>
 
-              {/* Country / store badge */}
               <div className="mt-4 flex items-center gap-2 text-sm font-poppins text-gray-500">
                 <span className="text-base">{product.country === 'nigeria' ? '🇳🇬' : '🇨🇦'}</span>
                 <span>Available in <strong className="text-gray-900">{product.country === 'nigeria' ? 'Nigeria' : 'Canada'}</strong> store</span>
@@ -209,18 +203,15 @@ const ProductDetail = () => {
 
             {/* Right — Product info */}
             <div>
-              {/* Category tag */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-4 h-0.5 bg-[#E02020]" />
                 <span className="font-poppins text-xs font-bold text-[#E02020] uppercase tracking-widest">{product.category}</span>
               </div>
 
-              {/* Title */}
               <h1 className="font-montserrat font-extrabold text-2xl md:text-3xl text-gray-900 leading-tight mb-4">
                 {product.name}
               </h1>
 
-              {/* Stars + reviews */}
               <div className="flex items-center gap-3 mb-5 pb-5 border-b border-gray-100">
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
@@ -236,22 +227,15 @@ const ProductDetail = () => {
                 </span>
               </div>
 
-              {/* Price */}
               <div className="mb-6">
                 <p className="font-montserrat font-extrabold text-4xl text-gray-900">
                   {formatPrice(product.price, product.currency)}
                 </p>
-                <p className="font-poppins text-sm text-gray-400 mt-1">
-                  Per unit · Price excludes delivery
-                </p>
+                <p className="font-poppins text-sm text-gray-400 mt-1">Per unit · Price excludes delivery</p>
               </div>
 
-              {/* Description snippet */}
-              <p className="font-poppins text-sm text-gray-600 leading-relaxed mb-6">
-                {product.description}
-              </p>
+              <p className="font-poppins text-sm text-gray-600 leading-relaxed mb-6">{product.description}</p>
 
-              {/* Qty selector */}
               {product.inStock && (
                 <div className="flex items-center gap-4 mb-6">
                   <span className="font-montserrat font-bold text-sm text-gray-700 uppercase tracking-wide">Quantity</span>
@@ -274,7 +258,6 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Action buttons */}
               <div className="flex gap-3 mb-6">
                 <button
                   onClick={handleAddToCart}
@@ -307,7 +290,7 @@ const ProductDetail = () => {
                 </button>
               </div>
 
-              {/* Added confirmation */}
+              {/* ── Added confirmation — opens CartDrawer on click ── */}
               {added && (
                 <div className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-3 mb-4">
                   <span className="font-poppins text-sm text-green-700 font-semibold">
@@ -322,7 +305,6 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Trust mini-badges */}
               <div className="grid grid-cols-3 gap-3 pt-5 border-t border-gray-100">
                 {[
                   { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'Quality Assured' },
@@ -331,7 +313,7 @@ const ProductDetail = () => {
                 ].map(b => (
                   <div key={b.label} className="flex flex-col items-center text-center gap-1.5">
                     <div className="w-9 h-9 bg-red-50 flex items-center justify-center">
-                      <svg className="w-4.5 h-4.5 text-[#E02020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}>
+                      <svg className="text-[#E02020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ width: '18px', height: '18px' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={b.icon} />
                       </svg>
                     </div>
@@ -342,18 +324,15 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* ── Tabs: Description / Specs / Shipping ── */}
+          {/* ── Tabs ── */}
           <div className="mt-6 bg-white border border-gray-100">
-            {/* Tab headers */}
             <div className="flex border-b border-gray-100">
               {(['description', 'specs', 'shipping'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-4 font-montserrat font-bold text-sm uppercase tracking-wide transition-all border-b-2 ${
-                    activeTab === tab
-                      ? 'border-[#E02020] text-[#E02020]'
-                      : 'border-transparent text-gray-500 hover:text-gray-800'
+                    activeTab === tab ? 'border-[#E02020] text-[#E02020]' : 'border-transparent text-gray-500 hover:text-gray-800'
                   }`}
                 >
                   {tab === 'description' ? 'Description' : tab === 'specs' ? 'Specifications' : 'Shipping & Returns'}
@@ -361,7 +340,6 @@ const ProductDetail = () => {
               ))}
             </div>
 
-            {/* Tab content */}
             <div className="p-6 md:p-8">
               {activeTab === 'description' && (
                 <div className="max-w-3xl">
@@ -388,10 +366,10 @@ const ProductDetail = () => {
                   <div className="divide-y divide-gray-100">
                     {Object.entries({
                       ...SPECS,
-                      'Product ID':  product.id,
-                      'Rating':      `${product.rating} / 5 (${product.reviews} reviews)`,
+                      'Product ID':   product.id,
+                      'Rating':       `${product.rating} / 5 (${product.reviews} reviews)`,
                       'Availability': product.inStock ? 'In Stock' : 'Out of Stock',
-                      'Added':       new Date(product.createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
+                      'Added':        new Date(product.createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }),
                     }).map(([key, val]) => (
                       <div key={key} className="flex items-center py-3">
                         <span className="font-poppins font-semibold text-sm text-gray-500 w-40 flex-shrink-0">{key}</span>
@@ -462,6 +440,21 @@ const ProductDetail = () => {
           )}
         </div>
       </div>
+
+      {/* Cart FAB */}
+      <button
+        onClick={() => setIsCartOpen(true)}
+        className="fixed bottom-6 right-6 z-30 bg-[#E02020] text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:bg-[#c01a1a] transition-all hover:scale-110"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        {cartCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-gray-900 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center">
+            {cartCount}
+          </span>
+        )}
+      </button>
 
       <Footer />
     </div>
