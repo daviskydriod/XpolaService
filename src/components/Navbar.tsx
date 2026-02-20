@@ -9,13 +9,15 @@ import { useTheme } from "@/contexts/ThemeContext";
 import logoWhite from "@/assets/logo-white.png";
 import logoBlack from "@/assets/logo-black.png";
 
+const { selectedCountry } = useCountry();
+
 const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Services", href: "/services" },
-  { label: "Shop", href: "/shop" }, // ← Add this line
-  { label: "About", href: "/about" },
-  { label: "Projects", href: "/projects" },
-  { label: "Contact", href: "/contact" },
+  { label: "Home", href: `/${selectedCountry}` },
+  { label: "Services", href: `/${selectedCountry}/services` },
+  { label: "Shop", href: `/${selectedCountry}/shop` },
+  { label: "About", href: `/${selectedCountry}/about` },
+  { label: "Projects", href: `/${selectedCountry}/projects` },
+  { label: "Contact", href: `/${selectedCountry}/contact` },
 ];
 
 const countries = [
