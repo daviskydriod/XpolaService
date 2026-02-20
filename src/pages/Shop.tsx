@@ -633,16 +633,45 @@ const BulkOrderBanner = ({ isNigeria }: { isNigeria: boolean }) => (
 const Testimonials = ({ isNigeria }: { isNigeria: boolean }) => {
   const reviews = isNigeria
     ? [
-        { name: 'Chukwuemeka O.', role: 'Site Manager, Lagos', rating: 5, text: 'Xpola delivered our construction materials on time and in perfect condition. The pricing is unbeatable for bulk orders. Will definitely order again.' },
-        { name: 'Fatima A.', role: 'Procurement Officer, Abuja', rating: 5, text: 'I was impressed by the quality of the oil & gas supplies. Everything was ISO certified as advertised. The support team was also very responsive.' },
-        { name: 'Biodun K.', role: 'Business Owner, Port Harcourt', rating: 4, text: 'Great platform for sourcing industrial goods. Delivery to PH was faster than expected. The Paystack integration made checkout seamless.' },
+        { 
+          name: "Chukwuemeka O.", 
+          role: "Site Manager, Lagos", 
+          rating: 5, 
+          text: "Xpola delivered our construction materials on time and in perfect condition. The pricing is unbeatable for bulk orders. Will definitely order again." 
+        },
+        { 
+          name: "Fatima A.", 
+          role: "Procurement Officer, Abuja", 
+          rating: 5, 
+          text: "I was impressed by the quality of the oil & gas supplies. Everything was ISO certified as advertised. The support team was also very responsive." 
+        },
+        { 
+          name: "Biodun K.", 
+          role: "Business Owner, Port Harcourt", 
+          rating: 4, 
+          text: "Great platform for sourcing industrial goods. Delivery to PH was faster than expected. The Paystack integration made checkout seamless." 
+        },
       ]
     : [
-        { name: 'James T.', role: 'Mine Supervisor, Alberta', rating: 5, text: 'Exactly what our mining operations needed. The GPR equipment arrived in perfect condition and the ASTM certifications checked out.' },
-        { name: 'Sarah M.', role: 'Procurement Lead, BC', rating: 5, text: 'Reliable, fast and competitively priced. We've been sourcing our industrial supplies through Xpola for 6 months now. No complaints.' },
-        { name: 'David L.', role: 'Construction Director, Ontario', rating: 4, text: 'The structural steel quality exceeded our expectations. The bulk order process was smooth and the team was very helpful throughout.' },
+        { 
+          name: "James T.", 
+          role: "Mine Supervisor, Alberta", 
+          rating: 5, 
+          text: "Exactly what our mining operations needed. The GPR equipment arrived in perfect condition and the ASTM certifications checked out." 
+        },
+        { 
+          name: "Sarah M.", 
+          role: "Procurement Lead, BC", 
+          rating: 5, 
+          text: "Reliable, fast and competitively priced. We've been sourcing our industrial supplies through Xpola for 6 months now. No complaints." 
+        },
+        { 
+          name: "David L.", 
+          role: "Construction Director, Ontario", 
+          rating: 4, 
+          text: "The structural steel quality exceeded our expectations. The bulk order process was smooth and the team was very helpful throughout." 
+        },
       ];
-
   return (
     <section className="py-14 bg-[#f8f8f8]">
       <div className="container mx-auto px-4">
