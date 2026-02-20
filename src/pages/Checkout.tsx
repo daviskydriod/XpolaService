@@ -386,20 +386,16 @@ const Checkout = () => {
     }
 
     // Clear cart then navigate
-    clearCart?.();
+// ✅ AFTER
+clearCart();
 
-    navigate('/order-success', {
-      state: {
-        reference,
-        customerName: `${info.firstName} ${info.lastName}`,
-        email:        info.email,
-        total:        cartTotal,
-        currency:     cart[0]?.currency,
-        itemCount:    cart.reduce((s, i) => s + i.quantity, 0),
-        country:      currentData.name,
-      },
-    });
-  };
+navigate('/account/orders', {
+  state: {
+    newOrder: true,
+    reference,
+    customerName: `${info.firstName} ${info.lastName}`,
+  },
+});
 
   // Empty cart guard
   if (cart.length === 0) {
