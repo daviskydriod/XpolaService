@@ -1,17 +1,85 @@
 // FILE PATH: src/pages/Checkout.tsx
 // Place this file at: src/pages/Checkout.tsx
 //
-// SETUP: npm install react-paystack
+// SETUP: No extra npm install needed.
 // Add to your .env:  VITE_PAYSTACK_PUBLIC_KEY=pk_test_xxxxxxxxxxxxxxxx
+//
+// react-paystack has been replaced with a lightweight inline hook
+// that loads Paystack's own JS directly — no duplicate-React crash.
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { usePaystackPayment } from 'react-paystack';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useCart } from '../contexts/CartContext';
 import { useCountry } from '../contexts/CountryContext';
 import { formatPrice } from '@/data/shopData';
+
+// ── Paystack inline loader (replaces react-paystack) ─────────────────────────
+declare global {
+  interface Window {
+    PaystackPop: {
+      setup: (opts: Record<string, unknown>) => { openIframe: () => void };
+    };
+  }
+}
+
+function loadPaystackScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.PaystackPop) { resolve(); return; }
+    const existing = document.querySelector(
+      'script[src="https://js.paystack.co/v1/inline.js"]'
+    );
+    if (existing) { existing.addEventListener('load', () => resolve()); return; }
+    const s = document.createElement('script');
+    s.src = 'https://js.paystack.co/v1/inline.js';
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Paystack script failed to load'));
+    document.head.appendChild(s);
+  });
+}
+
+interface PaystackConfig {
+  email: string;
+  amount: number;          // in kobo / pesewas (price × 100)
+  currency: string;
+  publicKey: string;
+  firstname?: string;
+  lastname?: string;
+  phone?: string;
+  reference?: string;
+  metadata?: Record<string, unknown>;
+}
+
+function usePaystackPayment(config: PaystackConfig) {
+  return function initializePayment(
+    onSuccess: (ref: { reference: string }) => void,
+    onClose: () => void
+  ) {
+    loadPaystackScript()
+      .then(() => {
+        const handler = window.PaystackPop.setup({
+          key: config.publicKey,
+          email: config.email,
+          amount: config.amount,
+          currency: config.currency,
+          ref:
+            config.reference ??
+            `xpola_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          firstname: config.firstname,
+          lastname: config.lastname,
+          phone: config.phone,
+          metadata: config.metadata ?? {},
+          callback: onSuccess,
+          onClose,
+        });
+        handler.openIframe();
+      })
+      .catch(err => console.error('Paystack error:', err));
+  };
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface CustomerInfo {
@@ -143,14 +211,14 @@ const CustomerInfoStep = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex gap-4">
-        <Field label="First Name"   name="firstName" value={info.firstName} onChange={onChange} placeholder="John"  half />
-        <Field label="Last Name"    name="lastName"  value={info.lastName}  onChange={onChange} placeholder="Doe"   half />
+        <Field label="First Name" name="firstName" value={info.firstName} onChange={onChange} placeholder="John"  half />
+        <Field label="Last Name"  name="lastName"  value={info.lastName}  onChange={onChange} placeholder="Doe"   half />
       </div>
-      <Field label="Email Address" name="email"   type="email" value={info.email}   onChange={onChange} placeholder="john@example.com" />
-      <Field label="Phone Number"  name="phone"   type="tel"   value={info.phone}   onChange={onChange} placeholder="+234 800 000 0000" />
-      <Field label="Delivery Address" name="address" value={info.address} onChange={onChange} placeholder="12 Example Street" />
+      <Field label="Email Address"    name="email"   type="email" value={info.email}   onChange={onChange} placeholder="john@example.com" />
+      <Field label="Phone Number"     name="phone"   type="tel"   value={info.phone}   onChange={onChange} placeholder="+234 800 000 0000" />
+      <Field label="Delivery Address" name="address"              value={info.address} onChange={onChange} placeholder="12 Example Street" />
       <div className="flex gap-4">
-        <Field label="City"  name="city"  value={info.city}  onChange={onChange} placeholder="Lagos"  half />
+        <Field label="City"  name="city"  value={info.city}  onChange={onChange} placeholder="Lagos"      half />
         <Field label="State" name="state" value={info.state} onChange={onChange} placeholder="Lagos State" half />
       </div>
 
@@ -197,9 +265,7 @@ const ReviewStep = ({
                 }}
               />
               <div className="flex-1 min-w-0">
-                <p className="font-poppins font-semibold text-sm text-gray-900 truncate">
-                  {item.name}
-                </p>
+                <p className="font-poppins font-semibold text-sm text-gray-900 truncate">{item.name}</p>
                 <p className="font-poppins text-xs text-[#E02020] font-semibold">{item.category}</p>
                 <p className="font-poppins text-xs text-gray-400 mt-0.5">Qty: {item.quantity}</p>
               </div>
@@ -214,16 +280,12 @@ const ReviewStep = ({
       {/* Total */}
       <div className="bg-gray-50 border border-gray-100 p-4">
         <div className="flex justify-between items-center">
-          <span className="font-montserrat font-bold text-gray-700 uppercase tracking-wide text-sm">
-            Total
-          </span>
+          <span className="font-montserrat font-bold text-gray-700 uppercase tracking-wide text-sm">Total</span>
           <span className="font-montserrat font-extrabold text-2xl text-gray-900">
             {currency && formatPrice(cartTotal, currency)}
           </span>
         </div>
-        <p className="font-poppins text-xs text-gray-400 mt-1">
-          Shipping calculated after payment
-        </p>
+        <p className="font-poppins text-xs text-gray-400 mt-1">Shipping calculated after payment</p>
       </div>
 
       {/* Delivery info summary */}
@@ -232,14 +294,10 @@ const ReviewStep = ({
           Delivering To
         </h3>
         <div className="space-y-1">
-          <p className="font-poppins text-sm font-semibold text-gray-900">
-            {info.firstName} {info.lastName}
-          </p>
+          <p className="font-poppins text-sm font-semibold text-gray-900">{info.firstName} {info.lastName}</p>
           <p className="font-poppins text-sm text-gray-500">{info.email}</p>
           <p className="font-poppins text-sm text-gray-500">{info.phone}</p>
-          <p className="font-poppins text-sm text-gray-500">
-            {info.address}, {info.city}, {info.state}
-          </p>
+          <p className="font-poppins text-sm text-gray-500">{info.address}, {info.city}, {info.state}</p>
         </div>
         <button
           onClick={onBack}
@@ -268,7 +326,7 @@ const ReviewStep = ({
   );
 };
 
-// ── Step 3: Paystack Payment ──────────────────────────────────────────────────
+// ── Step 3: Payment ───────────────────────────────────────────────────────────
 const PaymentStep = ({
   info,
   onBack,
@@ -283,45 +341,34 @@ const PaymentStep = ({
   const isNigeria = currentData.code === 'NG';
   const currency = cart[0]?.currency;
 
-  // Paystack amounts:
-  // NGN → kobo (multiply by 100)
-  // GHS → pesewas (multiply by 100)
-  // For Canada store we still use NGN on Paystack or your base currency
-  const paystackAmount = cartTotal * 100;
-
-  const config = {
-    reference: `xpola_${new Date().getTime()}_${Math.random().toString(36).slice(2, 7)}`,
+  // ── usePaystackPayment is now the LOCAL hook above — no react-paystack import ──
+  const initializePayment = usePaystackPayment({
     email: info.email,
-    amount: paystackAmount,
-    currency: isNigeria ? 'NGN' : 'GHS', // swap to USD/CAD when you upgrade Paystack account
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_d16f014e0c3a56d1c0ae9849a956b35cbe10eb56',
+    amount: cartTotal * 100,                          // kobo / pesewas
+    currency: isNigeria ? 'NGN' : 'GHS',
+    publicKey:
+      import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ||
+      'pk_test_d16f014e0c3a56d1c0ae9849a956b35cbe10eb56',
     firstname: info.firstName,
     lastname: info.lastName,
     phone: info.phone,
+    reference: `xpola_${new Date().getTime()}_${Math.random().toString(36).slice(2, 7)}`,
     metadata: {
       custom_fields: [
-        { display_name: 'Customer Phone',    variable_name: 'phone',    value: info.phone    },
-        { display_name: 'Delivery Address',  variable_name: 'address',  value: info.address  },
-        { display_name: 'City',              variable_name: 'city',     value: info.city     },
-        { display_name: 'State',             variable_name: 'state',    value: info.state    },
-        { display_name: 'Country Store',     variable_name: 'country',  value: currentData.name },
-        { display_name: 'Items Count',       variable_name: 'items',    value: String(cart.length) },
+        { display_name: 'Customer Phone',   variable_name: 'phone',   value: info.phone },
+        { display_name: 'Delivery Address', variable_name: 'address', value: info.address },
+        { display_name: 'City',             variable_name: 'city',    value: info.city },
+        { display_name: 'State',            variable_name: 'state',   value: info.state },
+        { display_name: 'Country Store',    variable_name: 'country', value: currentData.name },
+        { display_name: 'Items Count',      variable_name: 'items',   value: String(cart.length) },
       ],
     },
-  };
-
-  const initializePayment = usePaystackPayment(config);
+  });
 
   const handlePay = () => {
     initializePayment(
-      // onSuccess
-      (reference: { reference: string }) => {
-        onSuccess(reference.reference);
-      },
-      // onClose
-      () => {
-        // user closed the modal — do nothing, stay on page
-      }
+      (reference: { reference: string }) => onSuccess(reference.reference),
+      () => { /* user closed modal — stay on page */ }
     );
   };
 
@@ -350,9 +397,7 @@ const PaymentStep = ({
           ))}
         </div>
         <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between">
-          <span className="font-montserrat font-bold text-gray-900 uppercase tracking-wide text-sm">
-            Total
-          </span>
+          <span className="font-montserrat font-bold text-gray-900 uppercase tracking-wide text-sm">Total</span>
           <span className="font-montserrat font-extrabold text-xl text-gray-900">
             {currency && formatPrice(cartTotal, currency)}
           </span>
@@ -379,9 +424,7 @@ const PaymentStep = ({
           <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <p className="font-poppins text-sm text-gray-600 font-semibold">
-            Secured by Paystack
-          </p>
+          <p className="font-poppins text-sm text-gray-600 font-semibold">Secured by Paystack</p>
         </div>
         <p className="font-poppins text-xs text-gray-400 mb-6">
           You'll be redirected to Paystack's secure checkout to complete your payment via card, bank transfer, or USSD.
@@ -397,13 +440,10 @@ const PaymentStep = ({
           Pay {currency && formatPrice(cartTotal, currency)}
         </button>
 
-        {/* Payment method icons */}
+        {/* Payment method badges */}
         <div className="flex items-center justify-center gap-3 mt-4">
           {['Visa', 'Mastercard', 'Bank Transfer', 'USSD'].map(m => (
-            <span
-              key={m}
-              className="text-xs font-poppins text-gray-400 border border-gray-100 px-2 py-0.5"
-            >
+            <span key={m} className="text-xs font-poppins text-gray-400 border border-gray-100 px-2 py-0.5">
               {m}
             </span>
           ))}
@@ -458,12 +498,8 @@ const Checkout = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
             </svg>
           </div>
-          <h1 className="font-montserrat font-bold text-2xl text-gray-900 mb-3">
-            Your cart is empty
-          </h1>
-          <p className="font-poppins text-gray-500 mb-8">
-            Add some products before checking out.
-          </p>
+          <h1 className="font-montserrat font-bold text-2xl text-gray-900 mb-3">Your cart is empty</h1>
+          <p className="font-poppins text-gray-500 mb-8">Add some products before checking out.</p>
           <Link
             to={currentData.code === 'NG' ? '/nigeria/shop' : '/canada/shop'}
             className="inline-block bg-[#E02020] text-white font-montserrat font-bold px-8 py-4 hover:bg-[#c01a1a] transition-colors uppercase tracking-widest text-sm"
