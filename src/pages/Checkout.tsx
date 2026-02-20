@@ -1,12 +1,14 @@
 // FILE PATH: src/pages/Checkout.tsx
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { useCart } from '../contexts/CartContext';
 import { useCountry } from '../contexts/CountryContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatPrice } from '@/data/shopData';
 import { useFlutterwave } from '@/hooks/useFlutterwave';
+import { saveOrder } from '@/lib/orderService';
 
 interface CustomerInfo {
   firstName: string;
@@ -79,14 +81,36 @@ const Field = ({
 
 // ── Step 1: Info ──────────────────────────────────────────────────────────────
 const CustomerInfoStep = ({
-  info, onChange, onNext, isNigeria,
+  info, onChange, onNext, isNigeria, savedAddresses, onSelectAddress,
 }: {
   info: CustomerInfo;
   onChange: (name: keyof CustomerInfo, value: string) => void;
   onNext: () => void;
   isNigeria: boolean;
+  savedAddresses: { id: string; label: string; address: string; city: string; state: string }[];
+  onSelectAddress: (addr: { address: string; city: string; state: string }) => void;
 }) => (
   <form onSubmit={e => { e.preventDefault(); onNext(); }} className="space-y-4">
+
+    {/* Saved address quick-fill */}
+    {savedAddresses.length > 0 && (
+      <div className="bg-blue-50 border border-blue-100 p-4 space-y-2">
+        <p className="font-montserrat font-bold text-xs text-gray-700 uppercase tracking-widest">Use a saved address</p>
+        <div className="flex flex-wrap gap-2">
+          {savedAddresses.map(addr => (
+            <button
+              key={addr.id}
+              type="button"
+              onClick={() => onSelectAddress({ address: addr.address, city: addr.city, state: addr.state })}
+              className="font-poppins text-xs border border-blue-200 bg-white px-3 py-1.5 text-blue-700 hover:border-[#E02020] hover:text-[#E02020] transition-colors"
+            >
+              {addr.label} — {addr.city}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
     <div className="flex gap-4">
       <Field label="First Name" name="firstName" value={info.firstName} onChange={onChange} placeholder="John" half />
       <Field label="Last Name"  name="lastName"  value={info.lastName}  onChange={onChange} placeholder="Doe"  half />
@@ -133,7 +157,6 @@ const ReviewStep = ({ info, onBack, onNext }: { info: CustomerInfo; onBack: () =
           ))}
         </div>
       </div>
-
       <div className="bg-gray-50 border border-gray-100 p-4">
         <div className="flex justify-between items-center">
           <span className="font-montserrat font-bold text-gray-700 uppercase tracking-wide text-sm">Total</span>
@@ -141,7 +164,6 @@ const ReviewStep = ({ info, onBack, onNext }: { info: CustomerInfo; onBack: () =
         </div>
         <p className="font-poppins text-xs text-gray-400 mt-1">Shipping calculated after payment</p>
       </div>
-
       <div className="border border-gray-100 p-4">
         <h3 className="font-montserrat font-bold text-gray-900 mb-3 text-sm uppercase tracking-widest">Delivering To</h3>
         <div className="space-y-1">
@@ -152,7 +174,6 @@ const ReviewStep = ({ info, onBack, onNext }: { info: CustomerInfo; onBack: () =
         </div>
         <button onClick={onBack} className="mt-3 font-poppins text-xs text-[#E02020] font-semibold hover:underline">← Edit details</button>
       </div>
-
       <div className="flex gap-3">
         <button onClick={onBack} className="flex-1 border border-gray-200 text-gray-700 font-montserrat font-bold py-3.5 text-sm uppercase tracking-wide hover:bg-gray-50 transition-colors">← Back</button>
         <button onClick={onNext} className="flex-1 bg-[#E02020] text-white font-montserrat font-bold py-3.5 text-sm uppercase tracking-widest hover:bg-[#c01a1a] transition-colors">Proceed to Pay →</button>
@@ -162,20 +183,30 @@ const ReviewStep = ({ info, onBack, onNext }: { info: CustomerInfo; onBack: () =
 };
 
 // ── Step 3: Payment ────────────────────────────────────────────────────────────
-const PaymentStep = ({ info, onBack, onSuccess }: { info: CustomerInfo; onBack: () => void; onSuccess: (ref: string) => void }) => {
+const PaymentStep = ({
+  info, onBack, onSuccess,
+}: {
+  info: CustomerInfo;
+  onBack: () => void;
+  onSuccess: (ref: string) => void;
+}) => {
   const { cart, cartTotal } = useCart();
   const { currentData } = useCountry();
   const isNigeria = currentData.code === 'NG';
   const currency  = cart[0]?.currency;
 
-  // ✅ FIX: Destructure the returned object, not just the function
+  // Stable tx ref — generated once, never changes across re-renders
+  const txRef = useRef(
+    `xpola_${isNigeria ? 'ng' : 'ca'}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+  );
+
   const { initializePayment, loading } = useFlutterwave({
     amount:        cartTotal,
     currency:      isNigeria ? 'NGN' : 'CAD',
     customerEmail: info.email,
     customerName:  `${info.firstName} ${info.lastName}`,
     customerPhone: info.phone,
-    ref:           `xpola_${isNigeria ? 'ng' : 'ca'}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    ref:           txRef.current,
     meta: {
       address: info.address,
       city:    info.city,
@@ -248,7 +279,6 @@ const PaymentStep = ({ info, onBack, onSuccess }: { info: CustomerInfo; onBack: 
         </div>
         <p className="font-poppins text-xs text-gray-400 mb-6">Your payment is encrypted and processed securely.</p>
 
-        {/* ✅ FIX: Use initializePayment from destructured object, disable while loading */}
         <button
           onClick={initializePayment}
           disabled={loading}
@@ -290,33 +320,88 @@ const PaymentStep = ({ info, onBack, onSuccess }: { info: CustomerInfo; onBack: 
   );
 };
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// ── Main Checkout ─────────────────────────────────────────────────────────────
 const Checkout = () => {
-  const { cart, cartTotal } = useCart();
+  const { cart, cartTotal, clearCart } = useCart();
   const { currentData } = useCountry();
-  const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const navigate  = useNavigate();
   const isNigeria = currentData.code === 'NG';
 
   const [step, setStep] = useState<Step>('info');
   const [info, setInfo] = useState<CustomerInfo>(EMPTY_INFO);
 
+  // Auto-fill from user profile on mount
+  useEffect(() => {
+    if (!profile) return;
+    const defaultAddr = profile.addresses.find(a => a.isDefault) ?? profile.addresses[0];
+    setInfo({
+      firstName: profile.firstName,
+      lastName:  profile.lastName,
+      email:     profile.email,
+      phone:     profile.phone,
+      address:   defaultAddr?.address ?? '',
+      city:      defaultAddr?.city    ?? '',
+      state:     defaultAddr?.state   ?? '',
+    });
+  }, [profile]);
+
   const handleInfoChange = (name: keyof CustomerInfo, value: string) =>
     setInfo(prev => ({ ...prev, [name]: value }));
 
-  const handleSuccess = (reference: string) => {
+  const handleSelectAddress = (addr: { address: string; city: string; state: string }) =>
+    setInfo(prev => ({ ...prev, ...addr }));
+
+  const handleSuccess = async (reference: string) => {
+    // Save order to Firestore
+    if (user) {
+      try {
+        await saveOrder({
+          uid:          user.uid,
+          reference,
+          status:       'paid',
+          items:        cart.map(i => ({
+            id:       i.id,
+            name:     i.name,
+            price:    i.price,
+            quantity: i.quantity,
+            currency: i.currency,
+            image:    i.image,
+            category: i.category,
+          })),
+          total:        cartTotal,
+          currency:     cart[0]?.currency,
+          country:      currentData.name,
+          customerName: `${info.firstName} ${info.lastName}`,
+          email:        info.email,
+          phone:        info.phone,
+          address:      info.address,
+          city:         info.city,
+          state:        info.state,
+        });
+      } catch (err) {
+        console.error('Failed to save order:', err);
+        // Don't block success page — payment already went through
+      }
+    }
+
+    // Clear cart then navigate
+    clearCart?.();
+
     navigate('/order-success', {
       state: {
         reference,
         customerName: `${info.firstName} ${info.lastName}`,
-        email:     info.email,
-        total:     cartTotal,
-        currency:  cart[0]?.currency,
-        itemCount: cart.reduce((s, i) => s + i.quantity, 0),
-        country:   currentData.name,
+        email:        info.email,
+        total:        cartTotal,
+        currency:     cart[0]?.currency,
+        itemCount:    cart.reduce((s, i) => s + i.quantity, 0),
+        country:      currentData.name,
       },
     });
   };
 
+  // Empty cart guard
   if (cart.length === 0) {
     return (
       <div className="min-h-screen bg-white">
@@ -329,10 +414,8 @@ const Checkout = () => {
           </div>
           <h1 className="font-montserrat font-bold text-2xl text-gray-900 mb-3">Your cart is empty</h1>
           <p className="font-poppins text-gray-500 mb-8">Add some products before checking out.</p>
-          <Link
-            to={isNigeria ? '/nigeria/shop' : '/canada/shop'}
-            className="inline-block bg-[#E02020] text-white font-montserrat font-bold px-8 py-4 hover:bg-[#c01a1a] transition-colors uppercase tracking-widest text-sm"
-          >
+          <Link to={isNigeria ? '/nigeria/shop' : '/canada/shop'}
+            className="inline-block bg-[#E02020] text-white font-montserrat font-bold px-8 py-4 hover:bg-[#c01a1a] transition-colors uppercase tracking-widest text-sm">
             Continue Shopping
           </Link>
         </div>
@@ -340,6 +423,8 @@ const Checkout = () => {
       </div>
     );
   }
+
+  const savedAddresses = profile?.addresses ?? [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -352,12 +437,26 @@ const Checkout = () => {
             <p className="font-poppins text-gray-500 text-sm">
               Complete your order from Xpola {currentData.name} Store {isNigeria ? '🇳🇬' : '🇨🇦'}
             </p>
+            {profile && (
+              <p className="font-poppins text-xs text-gray-400 mt-1">
+                Signed in as <span className="text-[#E02020] font-semibold">{profile.email}</span>
+              </p>
+            )}
           </div>
 
           <StepBar current={step} />
 
           <div className="bg-white border border-gray-100 shadow-sm p-6 md:p-8">
-            {step === 'info'    && <CustomerInfoStep info={info} onChange={handleInfoChange} onNext={() => setStep('review')} isNigeria={isNigeria} />}
+            {step === 'info' && (
+              <CustomerInfoStep
+                info={info}
+                onChange={handleInfoChange}
+                onNext={() => setStep('review')}
+                isNigeria={isNigeria}
+                savedAddresses={savedAddresses}
+                onSelectAddress={handleSelectAddress}
+              />
+            )}
             {step === 'review'  && <ReviewStep  info={info} onBack={() => setStep('info')}   onNext={() => setStep('payment')} />}
             {step === 'payment' && <PaymentStep info={info} onBack={() => setStep('review')} onSuccess={handleSuccess} />}
           </div>
