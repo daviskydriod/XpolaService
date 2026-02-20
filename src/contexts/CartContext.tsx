@@ -64,7 +64,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCart(prev => prev.map(i => i.id === id ? { ...i, quantity } : i));
   };
 
-  const clearCart = () => setCart([]);
+ const clearCart = () => {
+  setCart([]);
+  localStorage.removeItem('cart'); // ← this line is critical if you persist the cart
+};
   const clearBlockedMessage = () => setBlockedMessage(null);
 
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
