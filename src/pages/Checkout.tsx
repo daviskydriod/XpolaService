@@ -1,11 +1,4 @@
 // FILE PATH: src/pages/Checkout.tsx
-// Place this file at: src/pages/Checkout.tsx
-//
-// SETUP: No extra npm install needed.
-// Add to your .env:  VITE_PAYSTACK_PUBLIC_KEY=pk_test_xxxxxxxxxxxxxxxx
-//
-// react-paystack has been replaced with a lightweight inline hook
-// that loads Paystack's own JS directly — no duplicate-React crash.
 
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -14,72 +7,7 @@ import Footer from '../components/Footer';
 import { useCart } from '../contexts/CartContext';
 import { useCountry } from '../contexts/CountryContext';
 import { formatPrice } from '@/data/shopData';
-
-// ── Paystack inline loader (replaces react-paystack) ─────────────────────────
-declare global {
-  interface Window {
-    PaystackPop: {
-      setup: (opts: Record<string, unknown>) => { openIframe: () => void };
-    };
-  }
-}
-
-function loadPaystackScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.PaystackPop) { resolve(); return; }
-    const existing = document.querySelector(
-      'script[src="https://js.paystack.co/v1/inline.js"]'
-    );
-    if (existing) { existing.addEventListener('load', () => resolve()); return; }
-    const s = document.createElement('script');
-    s.src = 'https://js.paystack.co/v1/inline.js';
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Paystack script failed to load'));
-    document.head.appendChild(s);
-  });
-}
-
-interface PaystackConfig {
-  email: string;
-  amount: number;          // in kobo / pesewas (price × 100)
-  currency: string;
-  publicKey: string;
-  firstname?: string;
-  lastname?: string;
-  phone?: string;
-  reference?: string;
-  metadata?: Record<string, unknown>;
-}
-
-function usePaystackPayment(config: PaystackConfig) {
-  return function initializePayment(
-    onSuccess: (ref: { reference: string }) => void,
-    onClose: () => void
-  ) {
-    loadPaystackScript()
-      .then(() => {
-        const handler = window.PaystackPop.setup({
-          key: config.publicKey,
-          email: config.email,
-          amount: config.amount,
-          currency: config.currency,
-          ref:
-            config.reference ??
-            `xpola_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          firstname: config.firstname,
-          lastname: config.lastname,
-          phone: config.phone,
-          metadata: config.metadata ?? {},
-          callback: onSuccess,
-          onClose,
-        });
-        handler.openIframe();
-      })
-      .catch(err => console.error('Paystack error:', err));
-  };
-}
-// ─────────────────────────────────────────────────────────────────────────────
+import { usePaystack } from '@/hooks/usePaystack'; // ← single import, no duplicates
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface CustomerInfo {
@@ -117,7 +45,6 @@ const StepBar = ({ current }: { current: Step }) => {
     <div className="flex items-center justify-center gap-0 mb-10">
       {steps.map((step, i) => (
         <div key={step.id} className="flex items-center">
-          {/* Circle */}
           <div className="flex flex-col items-center">
             <div
               className={`w-9 h-9 flex items-center justify-center font-montserrat font-bold text-sm transition-all ${
@@ -144,7 +71,6 @@ const StepBar = ({ current }: { current: Step }) => {
               {step.label}
             </span>
           </div>
-          {/* Connector */}
           {i < steps.length - 1 && (
             <div
               className={`w-16 md:w-24 h-0.5 mx-1 mb-5 transition-all ${
@@ -218,10 +144,9 @@ const CustomerInfoStep = ({
       <Field label="Phone Number"     name="phone"   type="tel"   value={info.phone}   onChange={onChange} placeholder="+234 800 000 0000" />
       <Field label="Delivery Address" name="address"              value={info.address} onChange={onChange} placeholder="12 Example Street" />
       <div className="flex gap-4">
-        <Field label="City"  name="city"  value={info.city}  onChange={onChange} placeholder="Lagos"      half />
+        <Field label="City"  name="city"  value={info.city}  onChange={onChange} placeholder="Lagos"       half />
         <Field label="State" name="state" value={info.state} onChange={onChange} placeholder="Lagos State" half />
       </div>
-
       <button
         type="submit"
         className="w-full bg-[#E02020] text-white font-montserrat font-bold py-4 hover:bg-[#c01a1a] transition-colors uppercase tracking-widest text-sm mt-2"
@@ -247,7 +172,6 @@ const ReviewStep = ({
 
   return (
     <div className="space-y-6">
-      {/* Order items */}
       <div>
         <h3 className="font-montserrat font-bold text-gray-900 mb-4 text-sm uppercase tracking-widest">
           Order Items ({cart.length})
@@ -277,7 +201,6 @@ const ReviewStep = ({
         </div>
       </div>
 
-      {/* Total */}
       <div className="bg-gray-50 border border-gray-100 p-4">
         <div className="flex justify-between items-center">
           <span className="font-montserrat font-bold text-gray-700 uppercase tracking-wide text-sm">Total</span>
@@ -288,7 +211,6 @@ const ReviewStep = ({
         <p className="font-poppins text-xs text-gray-400 mt-1">Shipping calculated after payment</p>
       </div>
 
-      {/* Delivery info summary */}
       <div className="border border-gray-100 p-4">
         <h3 className="font-montserrat font-bold text-gray-900 mb-3 text-sm uppercase tracking-widest">
           Delivering To
@@ -299,15 +221,11 @@ const ReviewStep = ({
           <p className="font-poppins text-sm text-gray-500">{info.phone}</p>
           <p className="font-poppins text-sm text-gray-500">{info.address}, {info.city}, {info.state}</p>
         </div>
-        <button
-          onClick={onBack}
-          className="mt-3 font-poppins text-xs text-[#E02020] font-semibold hover:underline"
-        >
+        <button onClick={onBack} className="mt-3 font-poppins text-xs text-[#E02020] font-semibold hover:underline">
           ← Edit details
         </button>
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-3">
         <button
           onClick={onBack}
@@ -341,36 +259,26 @@ const PaymentStep = ({
   const isNigeria = currentData.code === 'NG';
   const currency = cart[0]?.currency;
 
-  // ── usePaystackPayment is now the LOCAL hook above — no react-paystack import ──
-  const initializePayment = usePaystackPayment({
+  // ── Single clean call to usePaystack from src/hooks/usePaystack.ts ──
+  const initializePayment = usePaystack({
+    key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_d16f014e0c3a56d1c0ae9849a956b35cbe10eb56',
     email: info.email,
-    amount: cartTotal * 100,                          // kobo / pesewas
+    amount: cartTotal * 100, // NGN → kobo
     currency: isNigeria ? 'NGN' : 'GHS',
-    publicKey:
-      import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ||
-      'pk_test_d16f014e0c3a56d1c0ae9849a956b35cbe10eb56',
-    firstname: info.firstName,
-    lastname: info.lastName,
-    phone: info.phone,
-    reference: `xpola_${new Date().getTime()}_${Math.random().toString(36).slice(2, 7)}`,
+    ref: `xpola_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     metadata: {
       custom_fields: [
-        { display_name: 'Customer Phone',   variable_name: 'phone',   value: info.phone },
-        { display_name: 'Delivery Address', variable_name: 'address', value: info.address },
-        { display_name: 'City',             variable_name: 'city',    value: info.city },
-        { display_name: 'State',            variable_name: 'state',   value: info.state },
-        { display_name: 'Country Store',    variable_name: 'country', value: currentData.name },
-        { display_name: 'Items Count',      variable_name: 'items',   value: String(cart.length) },
+        { display_name: 'Phone',    variable_name: 'phone',   value: info.phone   },
+        { display_name: 'Address',  variable_name: 'address', value: info.address },
+        { display_name: 'City',     variable_name: 'city',    value: info.city    },
+        { display_name: 'State',    variable_name: 'state',   value: info.state   },
+        { display_name: 'Country',  variable_name: 'country', value: currentData.name },
+        { display_name: 'Items',    variable_name: 'items',   value: String(cart.length) },
       ],
     },
+    onSuccess: (reference) => onSuccess(reference.reference),
+    onClose: () => { /* user closed modal — stay on page */ },
   });
-
-  const handlePay = () => {
-    initializePayment(
-      (reference: { reference: string }) => onSuccess(reference.reference),
-      () => { /* user closed modal — stay on page */ }
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -409,16 +317,12 @@ const PaymentStep = ({
         <h3 className="font-montserrat font-bold text-gray-900 mb-2 text-sm uppercase tracking-widest">
           Delivering To
         </h3>
-        <p className="font-poppins text-sm text-gray-700 font-semibold">
-          {info.firstName} {info.lastName}
-        </p>
-        <p className="font-poppins text-sm text-gray-500">
-          {info.address}, {info.city}, {info.state}
-        </p>
+        <p className="font-poppins text-sm text-gray-700 font-semibold">{info.firstName} {info.lastName}</p>
+        <p className="font-poppins text-sm text-gray-500">{info.address}, {info.city}, {info.state}</p>
         <p className="font-poppins text-sm text-gray-500">{info.email} · {info.phone}</p>
       </div>
 
-      {/* Paystack CTA */}
+      {/* Pay button */}
       <div className="border border-gray-100 p-5 text-center">
         <div className="flex items-center justify-center gap-2 mb-4">
           <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -427,11 +331,10 @@ const PaymentStep = ({
           <p className="font-poppins text-sm text-gray-600 font-semibold">Secured by Paystack</p>
         </div>
         <p className="font-poppins text-xs text-gray-400 mb-6">
-          You'll be redirected to Paystack's secure checkout to complete your payment via card, bank transfer, or USSD.
+          Complete your payment via card, bank transfer, or USSD.
         </p>
-
         <button
-          onClick={handlePay}
+          onClick={initializePayment}
           className="w-full bg-[#E02020] text-white font-montserrat font-bold py-5 hover:bg-[#c01a1a] transition-colors text-base uppercase tracking-widest flex items-center justify-center gap-3"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,8 +342,6 @@ const PaymentStep = ({
           </svg>
           Pay {currency && formatPrice(cartTotal, currency)}
         </button>
-
-        {/* Payment method badges */}
         <div className="flex items-center justify-center gap-3 mt-4">
           {['Visa', 'Mastercard', 'Bank Transfer', 'USSD'].map(m => (
             <span key={m} className="text-xs font-poppins text-gray-400 border border-gray-100 px-2 py-0.5">
@@ -487,7 +388,6 @@ const Checkout = () => {
     });
   };
 
-  // Empty cart guard
   if (cart.length === 0) {
     return (
       <div className="min-h-screen bg-white">
@@ -515,13 +415,10 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-
-      {/* Red brand strip under navbar */}
       <div className="h-1 bg-[#E02020] mt-[72px]" />
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
-          {/* Page title */}
           <div className="text-center mb-10">
             <h1 className="font-montserrat font-extrabold text-3xl md:text-4xl text-gray-900 mb-2">
               Checkout
@@ -531,10 +428,8 @@ const Checkout = () => {
             </p>
           </div>
 
-          {/* Step bar */}
           <StepBar current={step} />
 
-          {/* Step content */}
           <div className="bg-white border border-gray-100 shadow-sm p-6 md:p-8">
             {step === 'info' && (
               <CustomerInfoStep
@@ -559,7 +454,6 @@ const Checkout = () => {
             )}
           </div>
 
-          {/* Trust badges */}
           <div className="flex items-center justify-center gap-6 mt-8">
             {[
               { icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', label: 'Secure Checkout' },
