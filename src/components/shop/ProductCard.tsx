@@ -35,7 +35,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         {/* Featured ribbon */}
         {product.featured && (
-          <span className="absolute top-3 left-0 bg-[#E02020] text-white text-xs font-bold px-3 py-1.5 uppercase tracking-wider font-montserrat">
+          <span className="absolute top-2 left-0 bg-[#E02020] text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 uppercase tracking-wider font-montserrat">
             Featured
           </span>
         )}
@@ -43,7 +43,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         {/* Out of stock overlay */}
         {!product.inStock && (
           <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-            <span className="bg-gray-900 text-white text-xs font-bold px-4 py-2 uppercase tracking-widest font-montserrat">
+            <span className="bg-gray-900 text-white text-[9px] sm:text-xs font-bold px-3 py-1.5 uppercase tracking-widest font-montserrat">
               Out of Stock
             </span>
           </div>
@@ -51,32 +51,32 @@ const ProductCard = ({ product }: ProductCardProps) => {
       </div>
 
       {/* ── Body ── */}
-      <div className="p-5 flex flex-col flex-1">
+      <div className="p-2.5 sm:p-4 flex flex-col flex-1">
         {/* Category label */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="w-3 h-0.5 bg-[#E02020]" />
-          <span className="text-xs font-semibold text-[#E02020] uppercase tracking-wider font-poppins">
+        <div className="flex items-center gap-1 mb-1.5">
+          <span className="w-2.5 h-0.5 bg-[#E02020]" />
+          <span className="text-[9px] sm:text-[10px] font-semibold text-[#E02020] uppercase tracking-wider font-poppins truncate">
             {product.category}
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="font-montserrat font-bold text-gray-900 text-base leading-snug mb-2 line-clamp-2">
+        <h3 className="font-montserrat font-bold text-gray-900 text-xs sm:text-sm leading-snug mb-1.5 line-clamp-2">
           {product.name}
         </h3>
 
-        {/* Description */}
-        <p className="font-poppins text-sm text-gray-500 line-clamp-2 leading-relaxed mb-4 flex-1">
+        {/* Description — hidden on very small screens to reduce clutter */}
+        <p className="hidden sm:block font-poppins text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3 flex-1">
           {product.description}
         </p>
 
         {/* Star rating */}
-        <div className="flex items-center gap-1.5 mb-4">
+        <div className="flex items-center gap-1 mb-2.5">
           <div className="flex gap-0.5">
             {[...Array(5)].map((_, i) => (
               <svg
                 key={i}
-                className={`w-3.5 h-3.5 ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-200'}`}
+                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-200'}`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -84,19 +84,19 @@ const ProductCard = ({ product }: ProductCardProps) => {
               </svg>
             ))}
           </div>
-          <span className="text-xs text-gray-400 font-poppins">
+          <span className="text-[9px] sm:text-[10px] text-gray-400 font-poppins">
             {product.rating} ({product.reviews})
           </span>
         </div>
 
         {/* Price + CTA */}
-        <div className="flex items-end justify-between pt-4 border-t border-gray-100">
-          <div>
-            <p className="font-montserrat font-extrabold text-xl text-gray-900">
+        <div className="flex items-end justify-between pt-2.5 border-t border-gray-100 gap-1">
+          <div className="min-w-0">
+            <p className="font-montserrat font-extrabold text-sm sm:text-base md:text-lg text-gray-900 truncate">
               {formatPrice(product.price, product.currency)}
             </p>
             <p
-              className={`text-xs font-poppins font-semibold mt-0.5 ${
+              className={`text-[9px] sm:text-[10px] font-poppins font-semibold mt-0.5 ${
                 product.inStock ? 'text-green-600' : 'text-gray-400'
               }`}
             >
@@ -107,7 +107,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <button
             onClick={handleAdd}
             disabled={!product.inStock || adding}
-            className={`font-montserrat font-bold text-xs px-4 py-2.5 uppercase tracking-wide transition-all duration-200 ${
+            className={`font-montserrat font-bold text-[9px] sm:text-[10px] px-2.5 sm:px-3.5 py-2 uppercase tracking-wide transition-all duration-200 flex-shrink-0 ${
               !product.inStock
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : adding
@@ -115,7 +115,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 : 'bg-[#E02020] text-white hover:bg-[#c01a1a]'
             }`}
           >
-            {adding ? '✓ Added' : 'Add to Cart'}
+            {adding ? '✓' : '+ Cart'}
           </button>
         </div>
       </div>
